@@ -1,0 +1,238 @@
+---
+title: "MLR_assignment"
+output: html_document
+---
+
+```{r import-lib, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(lubridate)
+library(corrgram)
+```
+Read the data
+```{r read data}
+rm(list = ls())
+set.seed(31084222)
+data <-  read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Assignment_FIT3152_2021/webforum.csv")
+
+data <- data[sample(nrow(data),20000),] #20000 rows
+```
+Clean the data
+
+```{r lib-for-MLR, message=F}
+library(Hmisc)
+library(psych)
+library(car)
+```
+
+```{r}
+data$Date <- as.Date(data$Date)
+data
+
+#check if there is any missing values
+sum(is.na(data))
+
+data_tidy <- data %>%
+  mutate(month = month(Date,  label = TRUE, abbr = TRUE), 
+         wday = wday(Date, label = TRUE, abbr = TRUE, week_start = 1),
+         year = year(Date),
+         day = day(Date),
+         hour = hm(Time))
+data_tidy
+
+#scale the numeric data
+data_tidy_scale <- data.frame( scale(data_tidy[,5:19],center=TRUE,scale=TRUE) )
+
+df <-  data_tidy_scale %>% select(WC,Analytic,Clout,Authentic,WPS,i,we,you,they,number,affect)
+```
+
+
+
+```{r }
+
+### Develop a linear model
+#   The model will be built using the training sample of the data
+#   The model will be validated using the validation sample of the data
+
+# Split data into training and validation samples
+# We will use (train.size)% for training and (100-train.size)% for validation
+train.size <- 0.8 
+train.index <- sample.int(length(df$Authentic), round(length(df$Authentic) * train.size))
+train.sample <- df[train.index,]
+valid.sample <- df[-train.index,]
+
+
+### Multiple regression model utilises a simple formula:
+#    Price = B0 + B1 x Horsepower + B2 x Curb.weight + B3 x City.mpg + ...
+#
+# We will perform additional tests on the trainig data
+
+# We will use a stepwise selection of variables by backwards elimination
+# We will consider all candidate variables and eliminate one at the time
+# As we have quite a few variables will not consider variable interaction at this stage, i.e.
+#   Price ~ Horsepower*Curb.weight*City.mpg*Peak.rpm*Num.of.doors
+
+### Fit the model (1)
+fit <- lm(Clout ~ WC+Authentic+Analytic+WPS+i+we+you+they+number+affect, data=train.sample)
+summary(fit) # R2=81%, F=139.5
+# plot(fit)
+```
+
+```{r elim-xtreme-1}
+# crPlots(fit)
+
+# Eliminate extreme values
+cutoff <- 4/((nrow(train.sample)-length(fit$coefficients)-2)) # Cook's D plot, cutoff as 4/(n-k-1)
+plot(fit, which=4, cook.levels=cutoff)                        # identify D values > cutoff
+
+plot(fit, which=5, cook.levels=cutoff)
+train.sample <- train.sample[-which(rownames(train.sample)    # Row names discovered in 2 rounds
+    %in% c("2896", "14211", "3062")),]  
+```
+After refiting the model 1
+```{r refit1}
+fit <- lm(Clout ~ WC+Authentic+Analytic+WPS+i+we+you+they+number+affect, data=train.sample)
+summary(fit) # R2=81%, F=139.5
+```
+```{r elim-xtreme-2}
+# crPlots(fit)
+
+# Eliminate extreme values
+cutoff <- 4/((nrow(train.sample)-length(fit$coefficients)-2)) # Cook's D plot, cutoff as 4/(n-k-1)
+plot(fit, which=4, cook.levels=cutoff)                        # identify D values > cutoff
+
+train.sample <- train.sample[-which(rownames(train.sample)    # Row names discovered in 2 rounds
+    %in% c("13606", "16790", "9455")),]  
+```
+ After refiting the model 2
+```{r refit2}
+fit <- lm(Clout ~ WC+Authentic+Analytic+WPS+i+we+you+they+number+affect, data=train.sample)
+summary(fit)$adj.r.squared # R2=81%, F=139.5
+```
+===================================================================================================
+```{r elim-xtreme-3}
+# crPlots(fit)
+
+# Eliminate extreme values
+cutoff <- 4/((nrow(train.sample)-length(fit$coefficients)-2)) # Cook's D plot, cutoff as 4/(n-k-1)
+plot(fit, which=4, cook.levels=cutoff)                        # identify D values > cutoff
+
+train.sample <- train.sample[-which(rownames(train.sample)    # Row names discovered in 2 rounds
+    %in% c("12415", "15441", "14549")),]  
+```
+ After refiting the model 3
+```{r refit3}
+fit <- lm(Clout ~ WC+Authentic+Analytic+WPS+i+we+you+they+number+affect, data=train.sample)
+summary(fit)$adj.r.squared # R2=81%, F=139.5
+```
+
+```{r elim-xtreme-4}
+# crPlots(fit)
+
+# Eliminate extreme values
+cutoff <- 4/((nrow(train.sample)-length(fit$coefficients)-2)) # Cook's D plot, cutoff as 4/(n-k-1)
+plot(fit, which=4, cook.levels=cutoff)                        # identify D values > cutoff
+
+train.sample <- train.sample[-which(rownames(train.sample)    # Row names discovered in 2 rounds
+    %in% c("2302", "2922", "12670")),]  
+```
+ After refiting the model 4
+```{r refit4}
+fit <- lm(Clout ~ WC+Authentic+Analytic+WPS+i+we+you+they+number+affect, data=train.sample)
+summary(fit)$adj.r.squared # R2=81%, F=139.5
+```
+
+```{r elim-xtreme-4}
+# crPlots(fit)
+
+# Eliminate extreme values
+cutoff <- 4/((nrow(train.sample)-length(fit$coefficients)-2)) # Cook's D plot, cutoff as 4/(n-k-1)
+plot(fit, which=4, cook.levels=cutoff)                        # identify D values > cutoff
+
+train.sample <- train.sample[-which(rownames(train.sample)    # Row names discovered in 2 rounds
+    %in% c("7505", "5020", "5366")),]  
+```
+ After refiting the model 4
+```{r refit4}
+fit <- lm(Clout ~ WC+Authentic+Analytic+WPS+i+we+you+they+number+affect, data=train.sample)
+summary(fit)$adj.r.squared # R2=81%, F=139.5
+```
+```{r elim-xtreme-5}
+# crPlots(fit)
+
+# Eliminate extreme values
+cutoff <- 4/((nrow(train.sample)-length(fit$coefficients)-2)) # Cook's D plot, cutoff as 4/(n-k-1)
+plot(fit, which=4, cook.levels=cutoff)                        # identify D values > cutoff
+
+
+train.sample <- train.sample[-which(rownames(train.sample)    # Row names discovered in 2 rounds
+    %in% c("12012", "17710", "177")),]  
+```
+ After refiting the model 5
+```{r refit5}
+fit <- lm(Clout ~ WC+Authentic+Analytic+WPS+i+we+you+they+number+affect, data=train.sample)
+summary(fit)$adj.r.squared # R2=81%, F=139.5
+plot(fit, which=5, cook.levels=cutoff)                        # identify D values > cutoff
+
+```
+```{r Check-multi-collinearity}
+
+# Check for multi-collinearity with Variance Inflation Factor
+# Correlated: none VIF=1, moderately 1<VIF<5, ** highly 5<VIF<10, ...
+vif(fit)
+```
+```{r rm-var-basedOn-pvalue}
+summary(fit)
+#eliminate the p-value lower than .05
+#rm number
+fit <- lm(Clout ~ WC+Authentic+Analytic+WPS+i+we+you+they+affect, data=train.sample)
+summary(fit) # R2=81%, F=139.5
+
+#rm affect       
+fit <- lm(Clout ~ WC+Authentic+Analytic+WPS+i+we+you+they, data=train.sample)
+summary(fit) # R2=81%, F=139.5
+
+```
+
+
+Clout ~ WC+Authentic+Analytic+WPS+i+we+you+they
+
+```{r}
+### VIF, F-ratio and p-values say it is good, so no need to do anything else
+
+##### Now evaluate the final linear model
+#     Find all predicted values for both a training set and a validation set
+train.sample$Pred.Clout <- predict(fit, 
+    newdata = subset(train.sample, select=c(WC,Authentic,Analytic,WPS,i,we,you,they)))
+valid.sample$Pred.Clout <- predict(fit, 
+    newdata = subset(valid.sample, select=c(WC,Authentic,Analytic,WPS,i,we,you,they)))
+
+# The theoretical model performance is defined here as R-Squared
+summary(fit)
+```
+
+
+```{r}
+
+# Check how good is the model on the training set - correlation^2, RME and MAE
+train.corr <- round(cor(train.sample$Pred.Clout, train.sample$Clout), 2)
+train.RMSE <- round(sqrt(mean((10 ^ train.sample$Pred.Clout - 10 ^ train.sample$Clout)^2)))
+train.MAE <- round(mean(abs(10 ^ train.sample$Pred.Clout - 10 ^ train.sample$Clout)))
+c(train.corr^2, train.RMSE, train.MAE)
+# With all prep is: 0.8836 2670.0000 1759.0000 / As above
+# Do nothing was:   0.7225 3997.0000 2676.0000 / See previous lesson
+
+# Check how good is the model on the validation set - correlation^2, RME and MAE
+valid.corr <- round(cor(valid.sample$Pred.Clout, valid.sample$Clout), 2)
+valid.RMSE <- round(sqrt(mean((10 ^ valid.sample$Pred.Clout - 10 ^ valid.sample$Clout)^2)))
+valid.MAE <- round(mean(abs(10 ^ valid.sample$Pred.Clout - 10 ^ valid.sample$Clout)))
+c(valid.corr^2, valid.RMSE, valid.MAE)
+# With all prep is: 0.7396 5723.0000 3334.0000 / As above
+# Do nothing was:   0.6889 4927.0000 3208.0000 / See previous lesson
+
+# Small data set - Cross-validation should be used, but vars selection needs to be auto!
+# These results and the model should now be interpreted
+
+```
+
+
+

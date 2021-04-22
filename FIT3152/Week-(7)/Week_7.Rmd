@@ -1,0 +1,194 @@
+```{r}
+library(ggplot2)
+set.seed(9999) # Random seed to make subset reproducible
+dsmall <-diamonds[sample(nrow(diamonds), 1000), ] # sample of 1000 rows
+```
+
+```{r}
+
+lm <-  lm(data= dsmall,price~carat )
+summary(lm)
+```
+
+
+```{r}
+attach(dsmall)
+
+contrasts(clarity) = contr.treatment(8)
+contrasts(clarity)
+```
+
+color
+```{r}
+attach(dsmall)
+
+contrasts(color) = contr.treatment(7)
+contrasts(color)
+```
+```{r}
+attach(dsmall)
+
+contrasts(cut) = contr.treatment(5)
+contrasts(cut)
+```
+
+```{r}
+#r-square = how much the variation of X can affect Y
+#when null hypo is rejected, that means the coffient is statistically siginificance
+car clat colo cut
+lm (log(price)~ log(carat)+clarity+color+cut,data= dsmall)
+```
+
+
+
+Q2
+```{r}
+B = read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Week-(7)/body.dat.csv")
+attach(B)
+# Test the hypothesis that men are taller than women on average.
+#Assume a significance of 5% 
+
+t.test(Height[Gender == "Male"],
+       Height[Gender == "Female"], 
+       conf.level = .95)
+
+##Conclusion :
+##if p v is less than 5%, so we can accept the alternate hypo
+## at 95%,men are taller than women on average.
+
+```
+
+```{r}
+B = read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Week-(7)/body.dat.csv")
+attach(B)
+# Test the hypothesis that men are taller than women on average.
+#Assume a significance of 5% 
+
+t.test(Height[Gender == "Male"],
+       Height[Gender == "Female"], 
+       conf.level = .99)
+
+##Conclusion :
+##if p v is less than 1%, so we can accept the alternate hypo
+## at 99%,men are taller than women on average.
+```
+Q3 : look at the foto
+```{r}
+B$BMI = B$Weight / (B$)
+
+
+```
+ (d) Calculate the regression of Height on the other body measurements for men and 
+ women separately. Which measurements are the most significant predictors of height 
+ for each gender? 
+
+ 
+```{r}
+attach(B)
+B.Male = B[which(B$Gender == "Male")]
+B.Female = B[which(B$Gender == "Female")]
+
+male.fit = lm(Height ~ .)
+```
+
+ 
+
+3. The data file “Dunnhumby1-20.csv” is a cut down and modified set of test data from the 
+Kaggle competition to predict when consumers would next visit a Dunnhumby supermarket 
+and how much they would spend. See: http://www.kaggle.com/c/dunnhumbychallenge for 
+more information. The current modified data set contains the customer ID, Date of visit, 
+Days since last visit (Delta), and Spend for 20 customers from the test set. 
+
+ 
+
+Calculate the regression of Spend vs Delta for each customer and summarize the results in a data frame similar to that below. 
+Hint: try using “plyr” package and dlply function. 
+
+ 
+
+```{r}
+library("plyr")
+c <-read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Week-(7)/Dunnhumby1-20.csv")
+attach(c)
+  models = dlply(c,"customer_id",function(df) lm( visit_spend ~ visit_delta,data= df))
+
+  
+  d = ldply(models, coef)
+  View(d)
+```
+
+
+
+4. Using the data from the UCI Machine Learning Repository comment on the factors affecting 
+red wine quality. Data site is: http://archive.ics.uci.edu/ml/datasets/Wine+Quality The file name 
+is: winequality-red.csv. 
+
+```{r}
+rwine = read.csv("http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv", sep = ";")
+
+View(rwine)
+#comment on the factors affecting red wine quality.
+
+fit = lm(data= rwine, quality ~ .)
+summary(fit)
+```
+ 5. Install the “ISLR” library. Using the “Carseats” data, calculate the regression equation 
+predicting Sales (child car seat sales) as a function of the input variables. Which variables 
+are significant predictors? 
+```{r}
+library(ISLR)
+C = Carseats
+str(C)
+```
+
+```{r}
+attach(C)
+contrasts(ShelveLoc)   = contr.treatment(3)
+contrasts(ShelveLoc)
+```
+
+```{r}
+contrasts(US)   = contr.treatment(2)
+contrasts(US) 
+
+contrasts(Urban)   = contr.treatment(2)
+contrasts(Urban)
+
+Cmodel = lm(Sales ~ . ,data=C)
+summary(Cmodel)
+```
+
+6. The text, G. James et al., An Introduction to Statistical Learning: with Applications in R 
+(ISLR) uses the “Advertising” data set to illustrate a number of different learning models. A 
+description of the data (p15) follows: “The Advertising data set consists of the sales of that 
+product in 200 different markets, along with advertising budgets for the product in each of 
+those markets for three different media: TV, radio, and newspaper. A copy of the data was 
+downloaded from: https://www.kaggle.com/ashydv/advertising-dataset and is on Moodle. 
+
+ 
+
+ Using the Advertising data, answer the following questions (taken from pp59-60 ISLR): 
+
+ 
+
+(a) Is there a relationship between advertising budget and sales? 
+```{r}
+fit = lm(data=C, Sales ~ Advertising)
+
+summary(fit)
+```
+
+(b) How strong is this relationship? 
+(c) Is the relationship linear? 
+(d) Which media contribute to sales? 
+(e) How accurately can we estimate the effect of each medium on sales? 
+(f) (Extension) Is there synergy (interactions) among the advertising media? 
+
+ 
+
+ Potential ways of addressing these questions using regression models and extensive 
+discussion of regression can be found on pages 59-82 of ISLR. 
+```{r}
+
+```
+

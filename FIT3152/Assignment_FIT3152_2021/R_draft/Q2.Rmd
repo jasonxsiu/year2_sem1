@@ -1,0 +1,327 @@
+---
+title: "FIT3152asm_1_Q2"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# no scientific notation
+options(scipen = 999)
+```
+Import needed library
+```{r import-lib, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(lubridate)
+```
+Read the data
+```{r read data}
+rm(list = ls())
+set.seed(31084222)
+data <-  read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Assignment_FIT3152_2021/webforum.csv")
+
+data <- data[sample(nrow(data),20000),] #20000 rows
+```
+Clean the data
+```{r min_max_normalisation }
+#define Min-Max normalisation method
+min_max_normalisation <- function(x) {
+    (x - min(x)) / (max(x) - min(x))
+  }
+```
+
+```{r data modification}
+data$Date <- as.Date(data$Date)
+
+
+#check if there is any missing values
+sum(is.na(data))
+
+data_tidy <- data %>%
+  mutate(month = month(Date,  label = TRUE, abbr = TRUE), 
+         wday = wday(Date, label = TRUE, abbr = TRUE, week_start = 1),
+         year = year(Date),
+         day = day(Date),
+         hour =  hour(hm(data$Time)))
+
+normalise_data_tidy <- function(x){
+  #apply Min-Max normalisation to all numeric columns
+data_tidy_norm <- as.data.frame(lapply(x[,5:19], min_max_normalisation))
+return(data_tidy_norm)
+
+}
+data_tidy_norm <-  normalise_data_tidy(data_tidy)
+
+
+#scale the data
+data_tidy_scale <- as.data.frame(scale(data_tidy[5:19]))
+
+```
+
+
+
+
+==============================================================================================================
+- Q2
+
+    Analyse the language used by groups. Some starting points:
+    
+```{r corr-of-thread}
+df_cor_thread <- data_tidy_norm %>%
+  cbind(ThreadID = data_tidy$ThreadID)%>%  
+  group_by(ThreadID)%>%
+summarise(Analytic_m = mean(Analytic)*100,
+                                             Clout_m = mean(Clout)*100,
+                                             Authentic_m = mean(Authentic)*100,
+                                            WC_m = mean(WC)*100,
+                                            WPS_m = mean(WPS)*100,
+                                            affect_m = mean(affect)*100,
+                                             i_m = mean(i)*100,
+          we_m = mean(we)*100,
+                    they_m = mean(they)*100,
+                    number_m = mean(number)*100,
+
+
+                                             )
+
+
+summary(df_cor_thread)
+```
+    
+ 
+
+    b By analysing the linguistic variables for all or some of the threads, is it possible to see a
+    difference in the language used by different groups?
+    --------------------------------------------------------------------------------------------
+    
+    1. find out the 10 most active threads
+    
+```{r top-10-Active}
+data_tidy_norm <- data_tidy_norm %>% cbind(ThreadID = data_tidy$ThreadID)
+df_active_10 <-  data_tidy %>% group_by(ThreadID)%>% summarise(count = n()) %>% arrange(desc(count))
+df_active_10 <- head(df_active_10,10)
+df_active_10
+
+df <-  data_tidy %>% filter(data_tidy_norm$ThreadID %in% df_active_10$ThreadID  ) %>% arrange(ThreadID)
+
+```
+
+```{r corrgram-top10}
+library("corrgram")
+corrgram(df,upper.panel=panel.cor)
+```
+
+    
+    Relationship :
+    2. corrogram 
+    3. see if there is any relationship
+    
+    Tone : 
+    4. Which one is the most positvie
+```{r which-+ve}
+data_nega_pose = df %>% group_by(ThreadID) %>% summarise(mean = mean(Tone))
+data_nega_pose = data_nega_pose %>% mutate(emo = ifelse(mean >50 , "Positive", "Negative"))%>% 
+  group_by(emo) %>% arrange(desc(mean))
+```
+
+    What languages used to shape this Tone?
+    1.Pick the most postive and negative one to analyse 
+    
+```{r}
+
+#most positve
+data.mostPose <- data_tidy %>% filter(ThreadID =="472752" )
+data.mostPose <- data.mostPose[5:19]
+# corrgram(data.mostPose,upper.panel=panel.cor)
+
+#most negative
+data.mostNega <- data_tidy %>% filter(ThreadID =="309286" )
+data.mostNega <- data.mostNega[5:19]
+# corrgram(data.mostNega,upper.panel=panel.cor)
+
+
+
+```
+
+
+   
+```{r radar-chart-all}
+library(fmsb)
+data.mostPose <- data.mostPose %>% select(Analytic,Clout,Authentic,WC,WPS,affect)%>% 
+  mutate(Pronoun = data.mostPose[,7] + data.mostPose[,8]+ data.mostPose[,9] +  data.mostPose[,10] )
+
+
+data.mostPose <- as.data.frame(lapply(data.mostPose[,], min_max_normalisation))
+data.mostPose <- data.mostPose %>% summarise(Analytic_m = mean(Analytic)*100,
+                                             Clout_m = mean(Clout)*100,
+                                             Authentic_m = mean(Authentic)*100,
+                                            WC_m = mean(WC)*100,
+                                            WPS_m = mean(WPS)*100,
+                                            affect_m = mean(affect)*100,
+                                             Pronoun_m = mean(Pronoun)*100,
+                                             )
+
+# negative
+data.mostNega <- data.mostNega %>% select(Analytic,Clout,Authentic,WC,WPS,affect)%>% 
+  mutate(Pronoun = data.mostNega[,7] + data.mostNega[,8]+ data.mostNega[,9] +  data.mostNega[,10] )
+
+
+data.mostNega <- as.data.frame(lapply(data.mostNega[,], min_max_normalisation))
+data.mostNega <- data.mostNega %>% summarise(Analytic_m = mean(Analytic)*100,
+                                             Clout_m = mean(Clout)*100,
+                                             Authentic_m = mean(Authentic)*100,
+                                            WC_m = mean(WC)*100,
+                                            WPS_m = mean(WPS)*100,
+                                            affect_m = mean(affect)*100,
+                                             Pronoun_m = mean(Pronoun)*100,
+                                             )
+
+radar_data_Pose <- data.mostNega %>% rbind(data.mostPose )
+
+
+
+radar_data_Pose <-data.frame( Analytic = c(100, 0 , data.mostPose[1,1],data.mostNega[1,1] ),
+                              Clout = c(100, 0 , data.mostPose[1,2],data.mostNega[1,2]  ),
+                              Authentic = c(100, 0 , data.mostPose[1,3],data.mostNega[1,3]  ),
+                              WC = c(100, 0 , data.mostPose[1,4],data.mostNega[1,4]  ),
+                              WPS = c(100, 0 , data.mostPose[1,5],data.mostNega[1,5]  ),
+                              affect = c(100, 0 , data.mostPose[1,6],data.mostNega[1,6]  ),
+                              Pronoun = c(100, 0 , data.mostPose[1,7],data.mostNega[1,7]  ),
+                              row.names = c("max","min","P","N")
+                              )
+#defien the colors filled
+colors_fill <- c(scales::alpha("blue", 0.3),scales::alpha("red", 0.5))
+#define the line colors
+colors_line <- c(scales::alpha("black", 0.5),scales::alpha("darkgrey", 0.5))
+radarchart(radar_data_Pose, axistype = 1,
+           seg = 2,
+    # Customize the polygon
+     pfcol =colors_fill, plwd = 2, plty = 1,
+    # Customize the grid
+    cglcol = "grey", cglty = 1, cglwd = 0.8,
+    pcol = colors_line,
+    # Customize the axis
+    axislabcol = "grey",
+    caxislabels = c(0, 50, 100))
+           
+legend( x=0.6,y=1.35,legend = row.names( radar_data_Pose[3:4,] ) ,
+        bty = "n",
+        pch = 20,
+        col=colors_fill,
+        cex=1.2,
+        pt.cex=3)
+
+```
+    
+
+    c Does the language used within threads (or between threads) change over time? How
+        consistent or variable is the language used within threads?
+    --------------------------------------------------------------------------------------------
+        
+      
+```{r vis-lan-complexity-by-yr}
+
+data_tidy_norm <-  normalise_data_tidy(data_tidy)
+data_tidy_norm <- data_tidy_norm %>% cbind(ThreadID = data_tidy$ThreadID, Date =data_tidy$Date )
+
+
+data_tidy_norm <- data_tidy_norm %>% select(Analytic,Clout,Tone,Authentic,WC,WPS,affect,ThreadID,Date, i ,we,they, you )%>% 
+  mutate(LangStructure = data_tidy_norm[,1] + data_tidy_norm[,6] )
+
+grp_yr = data.frame(data_tidy_norm ) %>% cbind(year = data_tidy$year, month=data_tidy$month )
+
+grp_yr <- grp_yr %>% group_by(ThreadID,year,month) %>% summarise(count =n(),LangStructure = mean(LangStructure,na.rm = TRUE),)%>% 
+  arrange(desc(year)) 
+
+# visualise it
+mycol <- c("navy", "blue", "cyan", "lightcyan", "yellow", "red", "red4")
+ggplot(grp_yr, aes(x= year , y=month, color =LangStructure )) +
+  geom_tile (aes(fill=LangStructure),colour = "white" )+labs(
+    title = "Time-Series Calendar Heatmap of the language struture",
+       x = "Year",
+       y = "Month"
+    )+ 
+  scale_fill_gradientn(colours = mycol)+theme_bw()+
+  theme(axis.text.x = element_text(, color="BLACK", angle=90))
+```
+
+```{r vis-pronoun-used-by-yr}
+
+data_tidy_norm <- data_tidy_norm %>% select(ThreadID,Date, i ,we,they, you ) 
+
+
+grp_yr <- data.frame(data_tidy_norm ) %>% cbind(year = data_tidy$year, month=data_tidy$month )
+
+grp_yr <- grp_yr %>% group_by(ThreadID,year,month) %>% summarise(count =n(),i=median(i),
+            we=median(we),
+            you=median(you),
+            they = median(they))%>% 
+  arrange(desc(year)) 
+
+grp_yr <-grp_yr %>%   pivot_longer(cols = c(`i`,`we`,`you`,`they`), names_to = "Pronoun", values_to= "Values")
+
+mycol <- c("navy", "blue", "cyan", "lightcyan", "yellow", "red", "red4")
+ggplot(grp_yr, aes(x= year , y=month, color = Values)) + 
+  geom_tile (aes(fill=Values),colour = "white" ) +  
+  scale_fill_gradientn(colours = mycol)+facet_grid(~Pronoun)+theme_linedraw()+
+  theme(axis.text.x = element_text(, color="BLACK", angle=90))+labs(
+    title = "Time-Series Calendar Heatmap: Pronoun of I, They, We, You",
+       x = "Year",
+       y = "Month"
+    )
+
+```
+
+How consistent or variable is the language used within threads?
+variance?
+```{r consistency}
+
+
+```
+
+        
+        
+        
+        
+
+
+```{r}
+
+data_tidy_norm <- as.data.frame(lapply(data_tidy[,5:19], min_max_normalisation))
+data_tidy_norm <- data_tidy_norm %>% cbind(ThreadID = data_tidy$ThreadID, Date =data_tidy$Date )
+
+over_df =  data.frame(data_tidy_norm )
+
+over_df = over_df%>% group_by(ThreadID, Date) %>% summarise( WC = mean(WC,na.rm = TRUE),
+            Analytic = mean(Analytic,na.rm = TRUE),
+            Clout = mean(Clout,na.rm = TRUE),
+            Authentic = mean(Authentic,na.rm = TRUE),
+            WP = mean(WPS,na.rm = TRUE),
+            i = mean(i,na.rm = TRUE),
+            we = mean(we,na.rm = TRUE),
+            you = mean(you,na.rm = TRUE),
+            they = mean(they,na.rm = TRUE),
+            number = mean(number,na.rm = TRUE),
+            affect = mean(affect,na.rm = TRUE),
+            posemo = mean(posemo,na.rm = TRUE),
+            negemo = mean(negemo,na.rm = TRUE),
+            anx = mean(anx,na.rm = TRUE))
+
+ggplot(over_df, aes(Date,Clout)) + geom_line()+ylim(0,2)+geom_smooth()
+ggplot(over_df, aes(Date,we)) + geom_line()+ylim(0,2)+geom_smooth()
+
+```
+        
+        
+        
+        
+        
+        
+
+        
+        
+        
+        
+        

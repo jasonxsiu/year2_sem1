@@ -1,0 +1,161 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+
+
+```{r filter-data}
+#filter data for social network analysis 
+filter_dt <- function(yr,month1){
+df <-  data_tidy %>% filter(year == yr, month == month1)
+df <- df %>% select(ThreadID, AuthorID)
+df <- inner_join(df, df, by = "ThreadID")
+df3 <- apply(df, 2, as.character) #AuthorID as character will become vertex ID
+df3 <- as.tibble(df3)
+df3 <- df3 %>% rename(sources = AuthorID.x, destinations= AuthorID.y)
+df3 <- df3 %>% filter(sources != destinations)
+# df3 <- df3 %>% distinct()
+return(df3)
+}
+```
+
+2002 feb
+
+```{r tabulate_dt}
+#set a class of table so that I can return multiple 
+#objects for the function of tabulate_dt
+setClass(Class = "Table",representation (edges ="list",
+                                         nodes ="list"))
+
+tabulate_dt <-  function(df3){
+
+sources <- df3  %>%
+  distinct(sources) %>%
+  rename(label = sources)
+
+## take destinication from letters and make it as "destinations" and renamed as "label"
+destinations <- df3 %>%
+  distinct(destinations) %>%
+  rename(label = destinations)
+
+
+##To create a single dataframe with a column with the unique locations 
+nodes <- full_join(sources, destinations, by = "label")
+nodes <- nodes %>% rowid_to_column("id")
+
+per_route <- df3 %>%  
+  group_by(sources, destinations) %>% 
+  summarise(weight = n()) %>% 
+  ungroup()
+
+
+edges <- per_route %>% 
+  left_join(nodes, by = c("sources" = "label")) %>% 
+  rename(from = id)
+
+edges <- edges %>% 
+  left_join(nodes, by = c("destinations" = "label")) %>% 
+  rename(to = id)
+
+edges <- select (edges, from, to, weight)
+
+#this will return an instance of this class -- Table
+return(new("Table",edges=edges,nodes=nodes))
+}
+```
+
+create function for centrality summary of node within the network
+```{r network-summary}
+network_centrality <- function(routes_igraph){
+degree_table <-  as.table( degree(routes_igraph))
+betweenness_table <-  as.table( betweenness(routes_igraph))
+closeness_table <-  as.table( closeness(routes_igraph))
+eigenvector_table <-  as.table( 	evcent(routes_igraph)$vector)
+
+#merge table
+bt_degree <- merge(degree_table, betweenness_table,by= "Var1" )
+bt_degree <-  bt_degree %>% rename(Betweenness = Freq.x, Degree=Freq.y , id=Var1)
+
+cls_eig <- merge(closeness_table,eigenvector_table, by= "Var1" )
+cls_eig <-  cls_eig %>% rename(Closeness = Freq.x, Eigenvector=Freq.y,id=Var1)
+
+network_summary <-  merge(bt_degree,cls_eig,by= "id")
+network_summary <-  merge(nodes,network_summary,by="id") %>% select(-id)
+
+#round all numbers in 2 digits
+network_summary <- network_summary %>% 
+               mutate(Degree = round(Degree,2), 
+                      Closeness =round( Closeness,2), 
+                      Eigenvector = round(Eigenvector,2))
+
+network_summary <-  network_summary %>% arrange(desc(Betweenness,Degree,Eigenvector,Closeness) )
+return(network_summary)
+}
+```
+
+network for 2002 feb
+```{r summary-feb}
+df3 <- filter_dt(2002,"Feb")
+feb_table <- tabulate_dt(df3)
+# access your information of feb_table and make them as dataframe
+edges <- as.data.frame(feb_table@edges)
+nodes <- as.data.frame(feb_table@nodes)
+
+routes_igraph <- graph_from_data_frame(d = edges_feb,  vertices=nodes, directed = F)
+
+network_centrality(routes_igraph)
+#count the vertexes and nodes
+vcount(routes_igraph)
+ecount(routes_igraph)
+```
+```{r visualise-2002-feb}
+library(igraph)
+
+
+plot(routes_igraph, 
+     vertex.shape="none",
+     edge.curved=TRUE)
+
+
+plot(routes_igraph, layout = layout_in_circle(routes_igraph), 
+     vertex.shape="none",
+     edge.curved=TRUE)
+# change the degree size
+# plot(routes_igraph, layout = layout_with_graphopt,
+#      edge.arrow.size = 0.2,
+#      vertex.size=deg*3,
+#      vertex.color=rgb(0.1,0.7,0.8,0.5) )
+```
+
+network for 2002 march
+```{r summary-march}
+df3 <- filter_dt(2002,"Mar")
+mar_table <- tabulate_dt(df3)
+# access your information of feb_table and make them as dataframe
+edges <- as.data.frame(mar_table@edges)
+nodes <- as.data.frame(mar_table@nodes)
+
+routes_igraph <- graph_from_data_frame(d = edges, vertices = nodes, directed = F)
+network_centrality(routes_igraph)
+#count the vertexes and nodes
+vcount(routes_igraph)
+ecount(routes_igraph)
+```
+```{r visualise-2002-mar}
+plot(routes_igraph, 
+     vertex.shape="none",
+     edge.curved=TRUE)
+
+
+plot(routes_igraph, layout = layout_in_circle(routes_igraph), 
+     vertex.shape="none",
+     edge.curved=TRUE)
+# change the degree size
+# plot(routes_igraph, layout = layout_with_graphopt,
+#      edge.arrow.size = 0.2,
+#      vertex.size=deg*3,
+#      vertex.color=rgb(0.1,0.7,0.8,0.5) )
+```
+
+

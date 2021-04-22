@@ -1,0 +1,425 @@
+---
+title: "asm1for3152"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+needed lib
+```{r}
+library(tidyverse)
+```
+
+```{r setup, include=FALSE}
+rm(list = ls())
+set.seed(31084222)
+webforum <-  read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Assignment_FIT3152_2021/webforum.csv")
+
+webforum <- webforum[sample(nrow(webforum),20000),] #20000 rows
+
+## as a df
+webforum <- data.frame(webforum)  
+```
+
+
+
+
+# Question 2: How many variables and observations do we have? 
+**Hint:** Look for help  *?dim* in your R console and remember
+that variables are in columns and observations in rows.
+*dim()* returns the number of rows and the number of columns in the data set (in that order)
+
+```{r dim, eval = FALSE}
+dim(webforum)   # 1pt
+```
+So, there are 276830  rows and  303 columns.
+
+
+The number of variables are `dim(crime_data)---` (1pt) and the number of rows are `dim(crime_data)---` (1pt)
+
+
+
+
+
+
+
+
+
+
+# Question 6: Separate the column "year" into two columns with names  "Month" and "Year". Display the first 3 lines of the data set to show the updated data set 
+
+```{r , eval = FALSE}
+##ThreadID and Author as factor
+ # webforum$ThreadID = as.factor( webforum$ThreadID) 
+ # webforum$AuthorID = as.factor( webforum$AuthorID) 
+
+webforum_new <- webforum %>%
+  separate(col = Date,                        # 1pt
+           into = c("Year", "Month", "Day"), "-" )   # 2pt
+
+webforum <-  webforum %>% mutate( Date = as.Date(Date))
+webforum_new <-  webforum_new %>% mutate( Year = as.numeric(webforum_new$Year))
+webforum_new <-  webforum_new %>% mutate( Day = as.numeric(webforum_new$Day))
+webforum_new <-  webforum_new %>% mutate( Month = as.numeric(webforum_new$Month))
+
+
+  head(webforum_new)                        # 1pt
+```
+
+# Question 7: If you look at the data *webforum_new*, you will notice that the variable of "Year" is coded as character. In this section, we are going to convert the variable of "Year" to a numeric variable
+```{r , eval = FALSE}
+webforum_new %>%
+  mutate(Year = as.numeric(Year))   # 1pt
+#!Dunno!
+head(webforum_new)                # 1pt
+```
+
+
+
+ 
+#  Question 8: Display the years in the data set. How many years are included in this  data set? 
+> Remember that you can learn more about what these functions by typing: `?unique` or `?length` into the R console.
+
+```{r crime-year-summary, eval = FALSE}
+unique(webforum_new$Year)    # 1pt
+# length tell us the length or longitude of a variable or a vector
+length(unique(webforum_new$Year))   #1pt
+```
+
+
+
+# Question 10: How many incidents do we have per "Offence_category" in total for 2019? 
+
+```{r , eval = FALSE}
+webforum_new %>% 
+  dplyr::filter(Year == c("2002","2003","2004","2005","2006","2007","2008","2009","2010","2011")) %>%    # 1pt
+  count(AuthorID)              # 1pt
+```
+
+
+
+The trend of the activity of the users based on WC
+```{r , eval = FALSE}
+
+year_count_wc <- webforum_new %>% 
+  dplyr::filter(Year == c("2002","2003","2004","2005","2006","2007","2008","2009","2010","2011")) %>%    # 1pt
+  count(Year , wt = WC, sort = TRUE)   
+
+ggplot(year_count, aes(Year,n ) )+geom_col()+theme_bw()
+
+ggplot(year_count, aes(Year,n, group = 1 ) )+geom_line()+geom_point()
+
+```
+
+
+The trend of the activity of the users based on WC
+```{r , eval = FALSE}
+
+
+month_count_wc <- webforum_new %>% 
+    dplyr::filter(Month == c(1:12)) %>%    # 1pt
+  count(Month , wt = WC, sort = TRUE)   
+
+ggplot(month_count_wc, aes(Month,n ) )+geom_col()+theme_bw()
+
+
+```
+
+
+The trend of the activity of the users based on Weekday
+
+
+```{r , eval = FALSE}
+
+
+weekday_count_activity <- webforum  %>% mutate(Weekday = weekdays(as.Date(webforum$Date,'%d-%m-%y')))
+
+
+
+weekday_count_activity <- weekday_count_activity %>% 
+   group_by(Weekday)%>%   count(Weekday) 
+
+##make weekday as a factor ordered by weekday
+day_count_wc$Weekday <- ordered(day_count_wc$Weekday, levels=c("Monday", "Tuesday", "Wednesday", "Thursday", 
+"Friday", "Saturday", "Sunday")) 
+
+
+
+ggplot(day_count_wc, aes(Weekday,n)) +geom_col() +ylim(0,5000) 
+```
+
+
+
+
+The trend of the activity of the users based on Month
+
+
+```{r , eval = FALSE}
+
+
+month_count_activity <- webforum  %>% mutate(Weekday = weekdays(as.Date(webforum$Date,'%d-%m-%y')))
+
+
+
+month_count_activity <- webforum_new %>% 
+   group_by(Month)%>%   count(Month) 
+
+
+ggplot(month_count_activity, aes(Month,n)) +geom_col() +ylim(0,3000) 
+
+```
+
+
+
+The trend of the activity of the users based on Year
+
+```{r , eval = FALSE}
+
+
+year_count_activity <- webforum_new %>% 
+   group_by(Year)%>%   count(Year) 
+
+
+ggplot(year_count_activity, aes(Year,n)) +geom_col() +xlab("Year")
+  
+```
+```{r}
+day_count_wc <- day_count_wc %>% 
+   group_by(Weekday)%>%   count(AuthorID )
+
+```
+
+
+
+Avg of Clout by year
+```{r , eval = FALSE}
+
+year_mean_Clout <- webforum_new  %>%
+  group_by(Year)%>% 
+summarise(mean_Clout = mean( Clout, sort = TRUE)   )
+  # count(Year , wt = Clout, sort = TRUE)   
+
+ggplot(year_mean_Clout 
+, aes(Year,mean, group = 1 ) )+geom_line()+geom_point()
+
+```
+
+Avg of Analytic by year
+```{r , eval = FALSE}
+
+year_mean_Analytic <- webforum_new  %>%
+  group_by(Year)%>% 
+summarise(mean_Analytic = mean( Analytic, sort = TRUE)   )
+  # count(Year , wt = Clout, sort = TRUE)   
+
+ggplot(year_mean_Analytic 
+, aes(Year,mean, group = 1 ) )+geom_line()+geom_point()
+
+```
+Median & Mean of Tone by year
+```{r , eval = FALSE}
+## median
+year_median_Tone <- webforum_new  %>%
+  group_by(Year)%>% 
+summarise(median = median( Tone, sort = TRUE)   )
+  # count(Year , wt = Clout, sort = TRUE)   
+
+ggplot(year_median_Tone , aes(Year,median, group = 1 ) )+geom_line()+geom_point()
+
+
+## mean
+year_mean_Tone <- webforum_new  %>%
+  group_by(Year)%>% 
+summarise(mean_Tone = mean( Tone, sort = TRUE)   )
+  # count(Year , wt = Clout, sort = TRUE)   
+
+
+ggplot(year_mean_Tone , aes(Year,mean, group = 1 ) )+geom_line()+geom_point()
+```
+Median & Mean of Authentic by year
+
+```{r}
+year_mean_Authentic <- webforum_new  %>%
+  group_by(Year)%>% 
+summarise(mean_Authentic = mean( Authentic, sort = TRUE)   )
+```
+```{r}
+year_mean <- webforum_new  %>%
+  group_by(Year)%>% 
+summarise(mean_WC = mean( WC, sort = TRUE)   )
+
+
+year_mean <- year_mean  %>%
+cbind(mean_Analytic=year_mean_Analytic$mean_Analytic)
+
+year_mean <- year_mean%>%
+cbind(mean_Clout=year_mean_Clout$mean_Clout)
+
+
+year_mean <- year_mean%>%
+cbind(mean_Tone=year_mean_Tone$mean_Tone)
+
+year_mean <- year_mean%>%
+cbind(mean_Authentic =year_mean_Authentic$mean_Authentic)
+
+year_mean
+```
+Relationship between "I" and negative emotion
+
+```{r}
+##take the col of i and negamo 
+df <- webforum %>%select(i, negemo)
+
+    outliers <- function(x) { 
+     
+      Q1 <- quantile(x, probs=.25) 
+      Q3 <- quantile(x, probs=.75) 
+      iqr = Q3-Q1 
+     
+     upper_limit = Q3 + (iqr*1.5) 
+     lower_limit = Q1 - (iqr*1.5) 
+     
+     x > upper_limit | x < lower_limit 
+    } 
+     
+    remove_outliers <- function(df, cols = i,negemo ) { 
+      for (col in cols) { 
+        df <- df[!outliers(df[[col]]),] 
+      } 
+      df 
+    } 
+
+   df <-  remove_outliers(df, c('i', 'negemo')) 
+    
+    ggplot(df, aes(i, negemo))+geom_point()
+ggplot(webforum, aes(i, negemo))+geom_point()
+
+
+```
+
+Relationship between "we" and negative emotion
+
+```{r}
+##take the col of i and negamo 
+df <- webforum %>%select(we, negemo)
+
+    outliers <- function(x) { 
+     
+      Q1 <- quantile(x, probs=.25) 
+      Q3 <- quantile(x, probs=.75) 
+      iqr = Q3-Q1 
+     
+     upper_limit = Q3 + (iqr*1.5) 
+     lower_limit = Q1 - (iqr*1.5) 
+     
+     x > upper_limit | x < lower_limit 
+    } 
+     
+    remove_outliers <- function(df, cols = we,negemo ) { 
+      for (col in cols) { 
+        df <- df[!outliers(df[[col]]),] 
+      } 
+      df 
+    } 
+
+   df <-  remove_outliers(df, c('we', 'negemo')) 
+    
+    ggplot(df, aes(we, negemo))+geom_point()
+ggplot(webforum, aes(we, negemo))+geom_point()
+
+
+```
+
+
+Relationship between "affect" and positive emotion
+
+```{r}
+##take the col of affect and posemo 
+df <- webforum %>%select(affect, posemo)
+
+    outliers <- function(x) { 
+     
+      Q1 <- quantile(x, probs=.25) 
+      Q3 <- quantile(x, probs=.75) 
+      iqr = Q3-Q1 
+     
+     upper_limit = Q3 + (iqr*1.5) 
+     lower_limit = Q1 - (iqr*1.5) 
+     
+     x > upper_limit | x < lower_limit 
+    } 
+     
+    remove_outliers <- function(df, cols = affect,negemo ) { 
+      for (col in cols) { 
+        df <- df[!outliers(df[[col]]),] 
+      } 
+      df 
+    } 
+
+   df <-  remove_outliers(df, c('affect', 'negemo')) 
+    
+    ggplot(df, aes(affect, posemo))+geom_point()
+ggplot(webforum, aes(affect, posemo))+geom_point()
+
+
+
+```
+
+```{r}
+ webforum$sum = webforum$i + webforum$we + webforum$you +webforum$they + webforum$number
+
+df <- webforum
+
+  outliers <- function(x) { 
+     
+      Q1 <- quantile(x, probs=.25) 
+      Q3 <- quantile(x, probs=.75) 
+      iqr = Q3-Q1 
+     
+     upper_limit = Q3 + (iqr*1.5) 
+     lower_limit = Q1 - (iqr*1.5) 
+     
+     x > upper_limit | x < lower_limit 
+    } 
+     
+    remove_outliers <- function(df, cols = sum,WPS ) { 
+      for (col in cols) { 
+        df <- df[!outliers(df[[col]]),] 
+      } 
+      df 
+    } 
+
+   df <-  remove_outliers(df, c('we', 'negemo')) 
+    
+    ggplot(df, aes(sum, WPS))+geom_point()
+ggplot(webforum, aes(sum, WPS))+geom_point()
+
+
+```
+
+
+
+```{r}
+
+
+df <- webforum %>% select(WC,Analytic,Clout,Authentic,Tone,WPS,i,we,you
+                          ,they,number,affect,posemo,negemo,anx)
+
+library(corrr)
+
+df_mt <-  View(correlate(df))
+
+
+library("corrgram")
+corrgram(df,upper.panel=panel.cor)
+```   
+The emotion is moderrately related to the tone of the author
+
+e.g when looking at the corr between  posemo and tone is positively corr. For negamo and tone is negatively corr
+
+
+```{r}
+ggplot(webforum, aes(affect, posemo)) + geom_point() +ylim(0,75)
+```
+

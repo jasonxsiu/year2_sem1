@@ -1,0 +1,137 @@
+---
+title: "FIT3152_week2_lab"
+output: html_document
+---
+Resource : https://rpubs.com/mcharif22/mpg-exploration
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r needed_lib, echo = TRUE}
+
+library(tidyverse)
+library(lattice)
+library(ggthemes)
+##library("extrafont")
+```
+
+
+
+(a) What is the relationship between city (cty) fuel consumption and highway (hwy) 
+consumption? 
+```{r}
+## https://www.youtube.com/watch?v=qnw1xDnt_Ec
+cty_VS_hwy <- 
+mpg %>% 
+ggplot( aes(x = hwy, y = cty, color= hwy) ) + geom_point(size=1.5, alpha = .8) + geom_smooth(method = "lm")
+
+
+## add a label for x and y, title, 
+cty_VS_hwy <- cty_VS_hwy+
+  labs(
+  title = "Relationship between ctw adn hwy",
+  subtitle = "What is the relationship between city (cty) fuel consumption and highway (hwy) 
+consumption?", 
+x = "hwy",
+y = "cty"
+)
+
+
+##using ggtheme to beautify the graph
+cty_VS_hwy <- cty_VS_hwy + theme_few()
+
+
+##add back the x and y asix titles
+cty_VS_hwy <- cty_VS_hwy + theme(axis.title = element_text())
+
+##change the color palette
+##cty_VS_hwy <- cty_VS_hwy + scale_color_manual(value = "#A6611A")
+
+## change the font
+##cty_VS_hwy <- cty_VS_hwy + theme(text = element_text(family = "Serif"))
+cty_VS_hwy
+
+```
+
+They have a positive relationship.
+
+
+```{r boxplot} 
+
+g = ggplot(data = mpg, aes(x=mpg$manufacturer,  y=mpg$hwy )) + geom_boxplot()  
+
+## change the rotation of the text
+  ##1. axis.text.x = take the text of x asix
+g = g + theme (axis.text.x  = element_text(angle = 90))
+
+## reorder based on median
+order = with(mpg, reorder(mpg$manufacturer , -1*hwy, median, ))
+
+g = ggplot(data = mpg, aes(x=order,  y=mpg$hwy )) + geom_boxplot()  
+
+g 
+
+```
+
+(b) How is fuel consumption (cty/hwy) related to manufacturer, transmission, class etc.?
+Are there manufacturers or car types with particularly high or low fuel consumption? 
+
+
+
+
+
+
+
+Q4
+(a) 
+Which variables are the best predictors of height? 
+Does this vary between men and women? 
+For examples, are some variables better at predicting height in one gender over the other? 
+
+ 
+```{r}
+
+B = read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Week-(2)/body.dat.csv")
+
+#B[25] = gender
+by(B, B[25], function(df) round(cor(df[1:23], df[,24]), digit = 2))
+
+
+```
+So, for male :Weight          for female :ShoulderWidth  
+
+
+
+(b) Using the same approach, which variables are best for predicting weight in each gender? 
+
+
+
+```{r}
+library(reshape2)
+B1  = B[, c(1:22, 24,23,25) ]  
+COR=by(B, B[25], function(df) round(cor(df[1:24], df[1:24]), digit = 2))
+
+female = melt(COR$Female)
+
+g= ggplot(data = female, aes(x=Var1,  y =Var2, fill=value)) + geom_tile(color = "white") 
+
+g = g + scale_fill_gradient(low = "blue" , high = "red")
+g
+```
+
+
+```{r}
+D = read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Week-(2)/Dunnhumby1-20.csv")
+
+g = ggplot(data = D , aes (x=D$visit_delta , y=D$visit_spend )) + geom_point()
+g = g + facet_grid(customer_id ~ .) +facet_wrap(~customer_id, ncol=4)
+g
+```
+
+
+
+Q3 : 
+
+```{r} 
+
+```
+  

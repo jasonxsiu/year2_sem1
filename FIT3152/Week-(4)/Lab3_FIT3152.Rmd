@@ -1,0 +1,82 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r }
+library(tidyverse)
+
+# qplot(Sepal.Length,	data	=	iris,	geom =	"histogram",	
+# facets	=	Species	~	.)	+	facet_wrap(~	Species,	ncol =	3)
+
+
+
+#Draft: do not circulate
+
+d	<- ggplot(mpg,	aes(displ,hwy,	color	=	class))	+	
+geom_point()	
+d	=	d	+	stat_summary(mapping	=	aes(x	=	displ,	y	=	
+hwy),	fun.min =	min,	fun.max =	max,	fun	=	median,	
+orientation	=	"x",	colour =	"black")
+d	=	d	+	geom_point(mapping	=	aes(x	=	displ,	y	=	hwy, color	=	class))	#	overplots original	points
+d
+#ggsave("hwyvdispl.jpg",	d,	width	=	20,	height	=	12, units	=	"cm")
+```
+
+Q2
+```{r}
+
+# (a) 
+#Area = Length * Width * pi/4.
+area <- function(length, width){
+  length * width * pi/4
+  
+}
+
+SepalA <-  area (iris$Sepal.Length, iris$Sepal.Length)
+PetalA <- area (iris$Petal.Length, iris$Petal.Width)
+#merge the column of SepalA (area of Sepal)
+I2 = cbind(iris,SepalA)
+I2 %>%  mutate(Petal.Area = PetalA)
+
+colnames(I2)[6]  = "Sepal.Area"
+
+# (b) 
+# Draw a scatterplot showing petal area vs sepal area, identifying each species. 
+ggplot(I2, aes(Sepal.Area, Petal.Area))+geom_point()
+
+
+
+## (c) Report the measurements of the plant in each species having 
+w <-  which.max(I2[,6])
+
+by(I2,I2[5], function (df) df( which.max(I2[,6]) ))
+
+
+##(i) the largest petal and
+
+
+##(ii) the largest sepal as a data frame. Your data frame should contain the original variables 
+##data along with the new columns showing sepal and petal area. 
+biggest.sepal <-  do.call(rbind,max.Sepal)
+```
+
+
+Q4 
+
+```{r}
+
+B=read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Week-(2)/body.dat.csv")
+
+B1 = aggregate(B[1:24], B[25], mean)
+
+#transpose the df
+B1 = t(B1)
+#get rid of the Gender (no need to use)
+B1 = B1 [-1, ]
+#change the colname
+colnames(B1) = c("Female", "Male")
+#change the format
+class(B1) = "numeric"
+```
+

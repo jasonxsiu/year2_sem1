@@ -1,0 +1,440 @@
+---
+title: "FIT3152asm_1_final_markdown"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE,include=T, message =FALSE)
+```
+Import needed library
+```{r import-lib, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(lubridate)
+library(extrafont) # for changing the font stlye of the graph
+```
+Read the data
+```{r read data}
+rm(list = ls())
+set.seed(31084222)
+data <-  read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Assignment_FIT3152_2021/webforum.csv")
+
+data <- data[sample(nrow(data),20000),] #20000 rows
+```
+Clean the data
+```{r min_max_normalisation }
+#define Min-Max normalisation method
+min_max_normalisation <- function(x) {
+    (x - min(x)) / (max(x) - min(x))
+  }
+```
+Change the font style
+```{r}
+changeFont <-  function(){
+   theme_classic() + theme(text=element_text(family="Times New Roman", face="bold", size=12)) #Times New Roman, 12pt, Bold
+}
+```
+
+```{r data modification}
+data$Date <- as.Date(data$Date)
+
+
+#check if there is any missing values
+sum(is.na(data))
+
+data_tidy <- data %>%
+  mutate(month = month(Date,  label = TRUE, abbr = TRUE), 
+         wday = wday(Date, label = TRUE, abbr = TRUE, week_start = 1),
+         year = year(Date),
+         day = day(Date),
+         hour =  hour(hm(data$Time)))
+
+  
+#apply Min-Max normalisation to all numeric columns
+data_tidy_norm <- as.data.frame(lapply(data_tidy[,5:19], min_max_normalisation))
+
+#scale the data
+data_tidy_scale <- as.data.frame(scale(data_tidy[5:19]))
+
+```
+
+
+==============================================================================================================
+
+
+- Q1
+
+    a. How active are participants, are there periods where this increases or decreases?
+
+    
+
+
+
+
+   
+```{r}
+over_df = data_tidy %>% group_by(Date) %>% summarise(count =n())
+ggplot(over_df,
+       aes(x = Date, 
+           y = count)) +
+  geom_line() +
+  geom_smooth()+labs(
+    title = "The number of active authors over the years",
+       subtitle = "(2002-2011)",
+       x = "Year",
+       y = "Activity volume"
+    )+changeFont()
+```
+
+
+
+    --------------------------------------------------------------------------------------------
+    c Looking at the linguistic variables, 
+      1 do these change over time?
+
+      
+```{r grp-variable-by-yr}
+
+grp_yr = data.frame(data_tidy_norm ) %>% cbind(year = data_tidy$year)
+
+grp_yr = grp_yr %>% group_by(year) %>% 
+  summarise(count =n(),Tone = mean(Tone, na.rm = TRUE),
+            WC = mean(WC,na.rm = TRUE),
+            Analytic = mean(Analytic,na.rm = TRUE),
+            Clout = mean(Clout,na.rm = TRUE),
+            Authentic = mean(Authentic,na.rm = TRUE),
+            WP = mean(WPS,na.rm = TRUE),
+            i = mean(i,na.rm = TRUE),
+            we = mean(we,na.rm = TRUE),
+            you = mean(you,na.rm = TRUE),
+            they = mean(they,na.rm = TRUE),
+            number = mean(number,na.rm = TRUE),
+            affect = mean(affect,na.rm = TRUE),
+            posemo = mean(posemo,na.rm = TRUE),
+            negemo = mean(negemo,na.rm = TRUE),
+            anx = mean(anx,na.rm = TRUE))  %>% 
+  arrange(desc(count))
+```
+
+```{r hour}
+
+library(extrafont)
+#Week-Day 
+library(lubridate)
+hour_df = data_tidy %>% group_by(hour) %>% summarize(count=n())
+ggplot(hour_df,
+       aes(x = hour, 
+           y = count))+labs(
+    title = "The number of active authors over the hours",
+       subtitle = "(12:00 - 24:00)",
+       x = "Hour",
+       y = "Activity volume"
+    ) + 
+  geom_col()+theme_classic()+geom_smooth()+changeFont()
+```
+```{r vis-by-yr}
+
+ggplot(data = grp_yr)+geom_line(aes(year,Tone,colour  = "Tone"))+
+
+  geom_line(aes(year,Authentic,colour  = "Authentic"))+
+
+  geom_line(aes(year,Clout, colour  = "Clout"))+
+
+  geom_line(aes(year,Analytic,colour ="Analytic"))+
+  scale_colour_manual("",values =
+                        c( "Tone"="blue", 
+                           "Authentic"="green", 
+                           "Clout" = "black", 
+                           "Analytic" = "red"))+ 
+  ylim(0.36,.64)+labs(
+    title = "The trend of summary variables over the years",
+       subtitle = "(2002-2011)",
+       x = "Year",
+       y = "Active Authors"
+    )+theme_minimal()+changeFont()
+```
+
+Since Clout's change has been most turbulent, it is worth know which variables define this variable. 
+We will use linear regression model to know it 
+      --------------------------------------------------------------------------------------------
+      2 Is there a relationship between variables?
+      --------------------------------------------------------------------------------------------
+      
+
+```{r}
+library(corrgram)
+ 
+corrgram(data_tidy_norm,upper.panel=panel.cor, main= "The correlation between linguistic variables")
+
+```
+   
+      
+      
+      
+==============================================================================================================
+- Q2
+
+    Analyse the language used by groups. Some starting points:
+
+    a Threads indicate groups of participants communicating on the same topic. Describe the
+    threads present in your data.
+    --------------------------------------------------------------------------------------------
+
+```{r}
+df_tone <- data_tidy %>% group_by(ThreadID) %>% summarise(Tone = median(Tone)) 
+
+summary(df_tone$Tone)
+```
+
+
+    
+```{r day-neg-pos}
+df <- data_tidy %>% 
+  group_by(ThreadID) %>%
+  summarise(pos = sum(posemo, na.rm = TRUE),
+            neg = sum(negemo, na.rm = TRUE),
+            anxiety = sum(anx, na.rm =TRUE))
+```
+      
+
+
+```{r day}
+df_2 <- data_tidy %>% 
+  group_by(ThreadID) %>%
+  summarise(Tone = median(Tone, na.rm = TRUE))
+df_2 = df_2 %>% mutate(emo = ifelse(Tone >50 , "Positive", "Negative"))%>% 
+  group_by(emo) %>% summarise(count =n())
+
+df_2 <- df_2 %>% mutate(pct = prop.table(count))
+
+     ggplot(df_2,aes(x= emo, y =count, label = scales::percent(pct))) + 
+    geom_col(position = 'dodge',width = .5) + 
+    geom_text(position = position_dodge(width = .9),    # move to center of bars
+              vjust = -0.5,    # nudge above top of bar
+              size = 3) + coord_flip()
+     
+     
+     
+df_for_donut_chart <- df_2 
+
+
+# Compute percentages
+df_for_donut_chart$fraction <- df_for_donut_chart$count / sum(df_for_donut_chart$count)
+
+# Compute the cumulative percentages (top of each rectangle)
+df_for_donut_chart$ymax <- cumsum(df_for_donut_chart$fraction)
+
+# Compute the bottom of each rectangle
+df_for_donut_chart$ymin <- c(0, head(df_for_donut_chart$ymax, n=-1))
+
+# Compute label position
+df_for_donut_chart$labelPosition <- (df_for_donut_chart$ymax + df_for_donut_chart$ymin) / 2
+
+# Compute a good label
+df_for_donut_chart$label <- paste0(df_for_donut_chart$category, "\n Percentage: ", round(df_for_donut_chart$pct*100,digits = 2) ,"%")
+
+# Make the plot
+ggplot(df_for_donut_chart, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=emo)) +
+  geom_rect() +
+  geom_label( x=3.5, aes(y=labelPosition, label=label), size=6) +
+  scale_fill_brewer(palette=3) +
+  coord_polar(theta="y") +
+  xlim(c(2, 4)) +
+  theme_void() +
+  theme(legend.position = "none")
+
+```
+    1. Sentiments : are most the thread +ve ?
+    2. Pronoun : What are the most used pronoun?
+    3. Structure : What are the mean of WC and WPS?
+
+
+
+    b By analysing the linguistic variables for all or some of the threads, is it possible to see a
+    difference in the language used by different groups?
+    --------------------------------------------------------------------------------------------
+    
+    Find out the languages used between the most postivie and negative threads.
+        1. find out the 10 most active threads
+    
+```{r top-10-Active}
+data_tidy_norm <- data_tidy_norm %>% cbind(ThreadID = data_tidy$ThreadID)
+df_active_10 <-  data_tidy %>% group_by(ThreadID)%>% summarise(count = n()) %>% arrange(desc(count))
+df_active_10 <- head(df_active_10,10)
+df_active_10
+
+df <-  data_tidy %>% filter(data_tidy_norm$ThreadID %in% df_active_10$ThreadID  ) %>% arrange(ThreadID)
+```
+      2. In the most active threads, find out the most most postivie and negative threads. The data set is called data_nega_pose
+
+```{r which-+ve}
+data_nega_pose <-  df %>% group_by(ThreadID) %>% summarise(mean = mean(Tone))
+data_nega_pose1 <- data_nega_pose
+data_nega_pose = data_nega_pose %>% mutate(emo = ifelse(mean >50 , "Positive", "Negative"))%>% 
+  group_by(emo) %>% arrange(desc(mean))
+
+
+#It is noticed that Thread 472752 is the most Positive and 309286 is the most Negative
+#most positve
+data.mostPose <- data_tidy %>% filter(ThreadID =="472752" )
+data.mostPose <- data.mostPose[5:19]
+data.mostPose1 <- data.mostPose
+
+#most negative
+data.mostNega <- data_tidy %>% filter(ThreadID =="309286" )
+data.mostNega <- data.mostNega[5:19]
+data.mostNega1 <- data.mostNega
+```
+
+
+Based on the data collected from the most negative and positive, we can make a Radarchart to visualise the difference
+```{r radar-chart-all-new }
+library(fmsb)
+data.mostPose <- data.mostPose %>% select(Analytic,Clout,Authentic,WC,WPS,affect)
+
+
+data.mostPose <- as.data.frame(lapply(data.mostPose[,], min_max_normalisation))
+data.mostPose <- data.mostPose %>% summarise(Analytic_m = mean(Analytic)*100,
+                                             Clout_m = mean(Clout)*100,
+                                             Authentic_m = mean(Authentic)*100,
+                                            WC_m = mean(WC)*100,
+                                            WPS_m = mean(WPS)*100,
+                                            affect_m = mean(affect)*100
+                                             )
+
+# negative
+data.mostNega <- data.mostNega %>% select(Analytic,Clout,Authentic,WC,WPS,affect)
+
+
+data.mostNega <- as.data.frame(lapply(data.mostNega[,], min_max_normalisation))
+data.mostNega <- data.mostNega %>% summarise(Analytic_m = mean(Analytic)*100,
+                                             Clout_m = mean(Clout)*100,
+                                             Authentic_m = mean(Authentic)*100,
+                                            WC_m = mean(WC)*100,
+                                            WPS_m = mean(WPS)*100,
+                                            affect_m = mean(affect)*100
+                                             )
+
+radar_data_Pose <- data.mostNega %>% rbind(data.mostPose )
+
+
+
+radar_data_Pose <-data.frame( Analytic = c(75, 0 , data.mostPose[1,1],data.mostNega[1,1] ),
+                              Clout = c(75, 0 , data.mostPose[1,2],data.mostNega[1,2]  ),
+                              Authentic = c(75, 0 , data.mostPose[1,3],data.mostNega[1,3]  ),
+                              WC = c(75, 0 , data.mostPose[1,4],data.mostNega[1,4]  ),
+                              WPS = c(75, 0 , data.mostPose[1,5],data.mostNega[1,5]  ),
+                              affect = c(75, 0 , data.mostPose[1,6],data.mostNega[1,6]  ),
+                              row.names = c("max","min","Positive","Negative")
+                              )
+#defien the colors filled
+colors_fill <- c(scales::alpha("yellow", 0.3),scales::alpha("black", 0.5))
+#define the line colors
+colors_line <- c(scales::alpha("black", 0.5),scales::alpha("darkgrey", 0.5))
+
+ radarchart(radar_data_Pose, axistype = 1,
+           seg = 2,
+    # Customize the polygon
+     pfcol =colors_fill, plwd = 2, plty = 1,
+    # Customize the grid
+    cglcol = "grey", cglty = 1, cglwd = 0.8,
+    pcol = colors_line,
+    # Customize the axis
+    axislabcol = "grey",
+    caxislabels = c(25, 50, 75),
+    palcex = 1.5) 
+
+  title(main = "The linguistic variables comparsion between the most negative \nand positive threads",
+      cex.main = 1.1,   
+      font.main= 1,
+      cex.sub = 0.75, font.sub = 1, col.sub = "green",
+      col.lab ="darkblue")
+      
+           
+legend( x=1.3,y=1.3,legend = row.names( radar_data_Pose[3:4,] ) ,
+        bty = "n",
+        pch = 20,
+        col=colors_fill,
+        cex=1,
+        pt.cex=3)
+
+```
+
+```{r radar-chart-all-pronoun }
+library(fmsb)
+data.mostPose1 <- data.mostPose1 %>% select(i ,we,they, you)
+data.mostPose1 <- as.data.frame(lapply(data.mostPose1[,], min_max_normalisation))
+data.mostPose1 <- data.mostPose1 %>% summarise(i_m = mean(i)*100,
+                                             we_m = mean(we)*100,
+                                             you_m = mean(you)*100,
+                                            they_m = mean(they)*100
+                                             )
+
+# negative
+data.mostNega1 <- data.mostNega1 %>% select(i ,we,they, you)
+data.mostNega1 <- as.data.frame(lapply(data.mostNega1[,], min_max_normalisation))
+data.mostNega1 <- data.mostNega1 %>% summarise(i_m = mean(i)*100,
+                                             we_m = mean(we)*100,
+                                             you_m = mean(you)*100,
+                                            they_m = mean(they)*100
+                                             )
+
+
+radar_data_Pose <- data.mostNega1 %>% rbind(data.mostPose1 )
+
+
+
+radar_data_Pose <-data.frame( i = c(30, 0 , data.mostPose1[1,1],data.mostNega1[1,1] ),
+                              we = c(30, 0 , data.mostPose1[1,2],data.mostNega1[1,2]  ),
+                              you = c(30, 0 , data.mostPose1[1,3],data.mostNega1[1,3]  ),
+                              they= c(30, 0 , data.mostPose1[1,4],data.mostNega1[1,4]  ),
+                              row.names = c("max","min","Positive","Negative")
+                              )
+#defien the colors filled
+colors_fill <- c(scales::alpha("yellow", 0.3),scales::alpha("black", 0.5))
+#define the line colors
+colors_line <- c(scales::alpha("black", 0.5),scales::alpha("darkgrey", 0.5))
+
+ radarchart(radar_data_Pose, axistype = 1,
+           seg = 2,
+    # Customize the polygon
+     pfcol =colors_fill, plwd = 2, plty = 1,
+    # Customize the grid
+    cglcol = "grey", cglty = 1, cglwd = 0.8,
+    pcol = colors_line,
+    # Customize the axis
+    axislabcol = "grey",
+    caxislabels = c(10, 20, 30)) 
+
+  title(main = "The pronoun variables comparsion between \nthe most negative and positive threads",
+      cex.main = 1.1,   
+        font.main= 1,
+      cex.sub = 0.75, font.sub = 1, col.sub = "green",
+      col.lab ="darkblue")
+      
+           
+legend( x=1.3,y=1.3,legend = row.names( radar_data_Pose[3:4,] ) ,
+        bty = "n",
+        pch = 20,
+        col=colors_fill,
+        cex=1,
+        pt.cex=3)
+```
+
+What about the pronoun they use?
+      
+    
+    c Does the language used within threads (or between threads) change over time? How
+        consistent or variable is the language used within threads?
+    --------------------------------------------------------------------------------------------
+        
+        
+      C.1  Does the language used within threads (or between threads) change over time? 
+        
+
+        
+        
+        
+        
+        

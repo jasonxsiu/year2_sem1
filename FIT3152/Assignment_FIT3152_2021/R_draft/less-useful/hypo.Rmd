@@ -1,0 +1,132 @@
+  ---
+title: "hypothesis"
+author: "Rounak"
+date: "02/04/2021"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r read data}
+rm(list = ls())
+set.seed(31084222)
+data <- read_csv("/Users/rounakagarwal/Desktop/3152/webforum.csv")
+
+data <- data[sample(nrow(data),20000),] #20000 rows
+```
+
+```{r data modification}
+data$Date <- as.Date(data$Date, format="%Y%m%d")
+data
+
+
+
+
+data_tidy <- data %>%
+  mutate(month = month(Date,  label = TRUE, abbr = TRUE), 
+         wday = wday(Date, label = TRUE, abbr = TRUE, week_start = 1),
+         year = year(Date),
+         day = day(Date),
+         hour = hour(Time))
+
+
+
+
+
+
+
+```
+
+
+```{r remove all possible outliers}
+outliers <- function(x) {
+
+  Q1 <- quantile(x, probs=.25)
+  Q3 <- quantile(x, probs=.75)
+  iqr = Q3-Q1
+
+ upper_limit = Q3 + (iqr*1.5)
+ lower_limit = Q1 - (iqr*1.5)
+
+ x > upper_limit | x < lower_limit
+}
+
+remove_outliers <- function(data_tidy, cols = names(data_tidy)) {
+  for (col in cols) {
+    data_tidy <- data_tidy[!outliers(data_tidy[[col]]),]
+  }
+  data_tidy
+}
+corrgram(data_tidy,upper.panel = panel.cor)
+```
+```{r}
+df_population <- data_tidy %>% group_by(AuthorID) %>% summarise(count =n(),Tone = mean(Tone, na.rm = TRUE),WC = mean(WC,na.rm = TRUE),Analytic = mean(Analytic,na.rm = TRUE),Clout = mean(Clout,na.rm = TRUE),Authentic = mean(Authentic,na.rm = TRUE),WP = mean(WPS,na.rm = TRUE),i = mean(i,na.rm = TRUE),we = mean(we,na.rm = TRUE),you = mean(you,na.rm = TRUE),they = mean(they,na.rm = TRUE),number = mean(number,na.rm = TRUE),affect = mean(affect,na.rm = TRUE),posemo = mean(posemo,na.rm = TRUE),negemo = mean(negemo,na.rm = TRUE),anx = mean(anx,na.rm = TRUE))
+df_population
+```
+
+
+```{r}
+df_author = data_tidy %>% group_by(AuthorID) %>% summarise(count =n(),Tone = mean(Tone, na.rm = TRUE),WC = mean(WC,na.rm = TRUE),Analytic = mean(Analytic,na.rm = TRUE),Clout = mean(Clout,na.rm = TRUE),Authentic = mean(Authentic,na.rm = TRUE),WP = mean(WPS,na.rm = TRUE),i = mean(i,na.rm = TRUE),we = mean(we,na.rm = TRUE),you = mean(you,na.rm = TRUE),they = mean(they,na.rm = TRUE),number = mean(number,na.rm = TRUE),affect = mean(affect,na.rm = TRUE),posemo = mean(posemo,na.rm = TRUE),negemo = mean(negemo,na.rm = TRUE),anx = mean(anx,na.rm = TRUE))  %>% arrange(desc(count))
+
+
+author_top = head(df_author,254)
+
+df_author2 = data_tidy %>% group_by(AuthorID) %>% summarise(count =n(),Tone = mean(Tone, na.rm = TRUE),WC = mean(WC,na.rm = TRUE),Analytic = mean(Analytic,na.rm = TRUE),Clout = mean(Clout,na.rm = TRUE),Authentic = mean(Authentic,na.rm = TRUE),WP = mean(WPS,na.rm = TRUE),i = mean(i,na.rm = TRUE),we = mean(we,na.rm = TRUE),you = mean(you,na.rm = TRUE),they = mean(they,na.rm = TRUE),number = mean(number,na.rm = TRUE),affect = mean(affect,na.rm = TRUE),posemo = mean(posemo,na.rm = TRUE),negemo = mean(negemo,na.rm = TRUE),anx = mean(anx,na.rm = TRUE))  %>% arrange(count)
+
+author_bottom = tail(df_author2,254)
+
+df_sample = rbind(author_top, author_bottom)
+df_sample
+```
+
+```{r}
+mean_sample_auth <- mean(df_sample$Authentic)
+mean_sample_auth
+mean_pop_auth <- mean(df_population$Authentic)
+mean_pop_auth
+```
+```{r}
+
+z_test <-  function(x, mu, sd, n, tailed){
+  z <- (x - mu) / (sd/sqrt(n))
+if(tailed == 1) return(cat('z-Score =', z, '\np-volue =', pnorm(-abs(z))))
+if(totled == 2) return(cat('z-Score =',  z, '\np-value =', 2 * pnorm(-abs(Z)))) 
+if(totled > 2 ||totled <1 ) return('invalid')
+}
+
+x <- mean_sample_auth
+mu <- mean_pop_auth
+sd <- sd(df_population$Authentic)
+n <- 508
+tailed <- 1 
+z_test(x, mu, sd, n, tailed)
+```
+
+```{r}
+ori_mean_sample <- mean(data_tidy$Authentic)
+x <- mean_sample_auth
+mu <- 50
+sd <- sd(data_tidy_scale$Authentic)
+n <- 498 
+tailed <- 1
+z_test(x, mu, sd, n, tailed)
+
+```
+```{r ttest}
+t.test(df_sample$Tone, mu = 60, alternative = "greater",conf.level = 0.99)
+
+t.test(df_sample$i ~df_sample$Authentic , mu = 0, alt= "two.sided",conf.level = 0.99, var.eq=F, paired=F)
+
+```
+
+
