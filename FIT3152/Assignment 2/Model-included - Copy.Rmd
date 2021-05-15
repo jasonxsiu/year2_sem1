@@ -1,0 +1,427 @@
+---
+output:
+  html_document: default
+  word_document: default
+---
+import the needed lib
+```{r include=F}
+library(tidyverse)
+library(simputation) #imputation
+library(naniar)
+library(lubridate)
+library(tidymodels)
+library(modeest) # find mode
+library(e1071) #Naïve Bayes
+library(ROCR)
+library(pROC)
+library(tree)
+library(skimr) # data exploratory
+library(psych)  #for general functions
+library(GGally)
+library(magrittr)
+library(flextable)
+```
+
+read file
+```{r read-file}
+rm(list = ls()) 
+WAUS <- read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Assignment 2/data.csv",
+                 stringsAsFactors = T)
+WAUS <- WAUS %>% filter(CloudTomorrow != "NA") #remove the rows in which the value of CloudTmr is NA
+L <- as.data.frame(c(1:49)) 
+set.seed(31084222) # Your Student ID is the random seed 
+L <- L[sample(nrow(L), 10, replace = FALSE),] # sample 10 locations ====
+WAUS <- WAUS[(WAUS$Location %in% L),] 
+WAUS <- WAUS[sample(nrow(WAUS), 2000, replace = FALSE),] # sample 2000 rows 
+WAUS$CloudTomorrow = as.factor(WAUS$CloudTomorrow)
+```
+
+
+============================================Explore data
+Since we are predicting the cloudiness, there is no use of Location, Date, thus removing them 
+```{r feature-selection}
+#date format
+WAUS$Date = ""
+WAUS$Day = as.character(WAUS$Day)
+WAUS$Month = as.character(WAUS$Month)
+WAUS$Year = as.character(WAUS$Year)
+WAUS$Date =paste(WAUS$Year,"-" ,WAUS$Month,"-", WAUS$Day)
+WAUS$Date = ymd(WAUS$Date)
+WAUS= WAUS %>% arrange(Date)
+WAUS <- WAUS  %>% select(-Location,-Day,-Year,-Month,-Date)
+```
+```{r explore-data, include=T}
+summary <- skim(WAUS)
+summary[,c(1:9,15)]
+
+kable = knitr::kable(summary[,c(1:9,15)])
+
+```
+
+```{r}
+par(mar=c(3,6,3,3))
+numScaleWAUS =as.data.frame(scale(select_if(WAUS,is.numeric)))
+lablist.x<-as.vector(names(numScaleWAUS))
+boxplot(numScaleWAUS
+ , horizontal=T,yaxt = "n",xaxt = "n",frame=T,outbg = "blue",outpch = 21# Outliers symbol
+,main= "Boxplot for all numeric variables in WAUS"        )
+#stripchart(numScaleWAUS, add = TRUE, col = "blue")
+text(y = seq(1, 14, by=1), par("usr")[1] -2, labels = lablist.x, srt = 45, pos = 1, xpd = TRUE)
+
+
+```
+
+
+
+============================================ preprocessing
+clean the data 
+
+impute the data
+```{r imputate-data}
+
+
+           WAUS$MinTemp = impute_mean( WAUS$MinTemp) 
+        WAUS$MaxTemp= impute_mean( WAUS$MaxTemp) 
+       WAUS$Rainfall=  impute_median( WAUS$Rainfall) 
+       WAUS$Evaporation=  impute_median( WAUS$Evaporation) 
+      WAUS$Sunshine=   impute_mean( WAUS$Sunshine) 
+      WAUS$WindGustSpeed=   impute_mean( WAUS$WindGustSpeed) 
+       WAUS$WindSpeed9am=  impute_mean( WAUS$WindSpeed9am) 
+       WAUS$WindSpeed3pm=  impute_mean( WAUS$WindSpeed3pm) 
+      WAUS$Humidity9am=   impute_mean( WAUS$Humidity9am) 
+      WAUS$Humidity3pm=   impute_mean( WAUS$Humidity3pm) 
+      WAUS$Pressure9am =   impute_mean( WAUS$Pressure9am) 
+     WAUS$Pressure3pm =   impute_mean( WAUS$Pressure3pm) 
+         WAUS$Temp9am =   impute_mean( WAUS$Temp9am) 
+     WAUS$Temp3pm =   impute_mean( WAUS$Temp3pm) 
+     
+
+   #drop all categorical values becuase they cannot be found
+WAUS = WAUS %>% drop_na()
+```
+
+set-seed
+```{r set-seed}
+ 
+ set.seed(31084222) #Student ID as random seed 
+ train.row = sample(1:nrow(WAUS), 0.7*nrow(WAUS)) 
+ WAUS.train = WAUS[train.row,] 
+ WAUS.test = WAUS[-train.row,] 
+
+ 
+```
+
+data pre-processing 
+```{ visualise }
+ggpairs(select_if(WAUS, is.numeric) ,cardinality_threshold=NULL )
+```
+
+
+
+```{r lib, include=F}
+library(caret)  #for training and cross validation (also calls other model libarie
+library(rpart)  #for trees
+library(rpart.plot)             # Enhanced tree plots
+library(RColorBrewer)       # Color selection for fancy tree plot
+library(party)                  # Alternative decision tree algorithm
+library(partykit)               # Convert rpart object to BinaryTree
+library(pROC)   #for ROC curves
+library(adabag)
+library(randomForest)
+```
+
+
+
+
+============================================ Naive bases
+```{r NB}
+#set.seed(31084222)
+NB.Model=naiveBayes(CloudTomorrow~.,data=WAUS.train)
+NB.predict=predict(NB.Model,WAUS.test, type = "class")
+#computing confusion matrix
+neededPerfomanceIndex = c(1,2,5,6,12)
+
+cm_NB = confusionMatrix(table(observed	= WAUS.test$CloudTomorrow	,	predicted	=	NB.predict))
+pf.NB =as.data.frame(  cm_NB$byClass[neededPerfomanceIndex])%>% rbind(cm_NB$overall[1])
+pf.NB = pf.NB %>% rownames_to_column()
+cm_NB = as.data.frame(cm_NB$table)
+cm_NB$model = "NB"
+
+```
+============================================ Decision tree
+```{r cv}
+#setting up cross-validation
+cvcontrol <- trainControl(method="repeatedcv", number = 10,
+                          allowParallel=TRUE)
+```
+
+```{r DT}
+#set.seed(31084222)
+train.tree <- tree(CloudTomorrow ~ ., 
+                   data=WAUS.train)
+
+
+#To evalaute the accuracy of the tree we can look at the confusion matrix for the Training data. 
+#obtaining class predictions
+tree.classTrain <-  predict(train.tree, WAUS.test, type="class")
+#confusion matrix 
+cm_dt = confusionMatrix(table(observed	=WAUS.test$CloudTomorrow	,	predicted	=	tree.classTrain))
+pf.dt =as.data.frame( cm_dt$byClass[neededPerfomanceIndex])%>% rbind(cm_dt$overall[1])
+pf.dt = pf.dt %>% rownames_to_column()
+cm_dt = as.data.frame(cm_dt$table) 
+cm_dt$model = "DT"
+
+
+```
+
+
+============================================ Bagging
+```{r bag}
+#set.seed(31084222)
+bag.train= bagging(CloudTomorrow ~. ,data = WAUS.train, mfinal = 6)
+#test
+bagging.predict = predict.bagging(bag.train, newdata = WAUS.test,
+                                  type = "class")
+
+# confusion matrix
+#computing confusion matrix
+cm_bag = confusionMatrix(table(observed	=WAUS.test$CloudTomorrow	,	predicted	=	bagging.predict$class))
+pf.bag =as.data.frame( cm_bag$byClass[neededPerfomanceIndex])%>% rbind(cm_bag$overall[1])
+pf.bag = pf.bag %>% rownames_to_column()
+cm_bag = as.data.frame(cm_bag$table)
+cm_bag$model = "Bagging"
+pf.bag
+
+```
+
+============================================ Boosting
+
+```{r boosting}
+#set.seed(31084222)    
+boosting.train= boosting(CloudTomorrow ~. ,data = WAUS.train, mfinal = 7)
+
+#test
+boosting.predict = predict.boosting(boosting.train, newdata = WAUS.test, type = "class")
+
+# confusion matrix
+cm_boosting  =confusionMatrix(table(observed	=WAUS.test$CloudTomorrow	,	predicted	=	boosting.predict$class))
+pf.boosting =as.data.frame( cm_boosting$byClass[neededPerfomanceIndex])%>% rbind(cm_boosting$overall[1])
+pf.boosting = pf.boosting %>% rownames_to_column()
+cm_boosting = as.data.frame(cm_boosting$table)
+cm_boosting$model = "Boosting"
+
+pf.boosting
+```
+
+============================================ RF
+```{r Ramdom-forest}
+#set.seed(31084222)
+rf.train= randomForest(CloudTomorrow ~. ,data = WAUS.train)
+#test
+rf.predict = predict(rf.train, newdata = WAUS.test, type = "class")
+#computing confusion matrix
+cm_rf = confusionMatrix(table(observed	=WAUS.test$CloudTomorrow	,	predicted	=	rf.predict))
+pf.rf =as.data.frame( cm_rf$byClass[neededPerfomanceIndex])%>% rbind(cm_rf$overall[1])
+pf.rf = pf.rf %>% rownames_to_column()
+cm_rf = as.data.frame(cm_rf$table)
+cm_rf$model = "RF"
+```
+============================================ Comparision
+
+
+
+```{r comparision-confusion-matrix}
+confMatrix =cm_dt %>% 
+  rbind( cm_rf,cm_boosting, cm_bag, cm_NB) 
+```
+
+```{r comparision-performance}
+pf.dt = pf.dt %>% 
+  rename(Performance = `cm_dt$byClass[neededPerfomanceIndex]` ) %>% 
+  mutate(model = "DT" )
+pf.dt[6,1] = "Accuracy"
+#make FPR
+pf.dt[7,2] = 1- pf.dt[2,2] 
+pf.dt[7,3] = "DT"
+pf.dt[7,1] = "FPR"
+
+
+pf.NB = pf.NB %>% 
+  rename(Performance = `cm_NB$byClass[neededPerfomanceIndex]` ) %>% 
+  mutate(model = "NB")
+pf.NB[6,1] = "Accuracy"
+pf.NB [7,2] = 1- pf.NB [2,2] 
+pf.NB [7,3] = "NB"
+pf.NB [7,1] = "FPR"
+
+pf.bag = pf.bag %>% 
+  rename(Performance = `cm_bag$byClass[neededPerfomanceIndex]` ) %>% 
+  mutate(model = "Bag")
+pf.bag[6,1] = "Accuracy"
+pf.bag [7,2] = 1- pf.bag [2,2] 
+pf.bag [7,3] = "Bag"
+pf.bag [7,1] = "FPR"
+
+pf.boosting = pf.boosting %>% 
+  rename(Performance = `cm_boosting$byClass[neededPerfomanceIndex]` ) %>% 
+  mutate(model = "Boosting")
+pf.boosting[6,1] = "Accuracy"
+pf.boosting[7,2] = 1- pf.boosting[2,2] 
+pf.boosting[7,3] = "Boosting"
+pf.boosting[7,1] = "FPR"
+
+pf.rf = pf.rf %>% 
+  rename(Performance = `cm_rf$byClass[neededPerfomanceIndex]` ) %>% 
+  mutate(model = "RF")
+pf.rf[6,1] = "Accuracy"
+pf.rf [7,2] = 1- pf.rf [2,2] 
+pf.rf [7,3] = "RF"
+pf.rf [7,1] = "FPR"
+
+
+pf.All = pf.dt %>% rbind(pf.NB,pf.bag,pf.boosting,pf.rf) %>% 
+  filter( Performance != is.na(Performance))
+
+pf.All = pf.All %>% pivot_wider(names_from =rowname, values_from =Performance )  
+
+pf.All = pf.All[,1] %>% cbind(round(pf.All[,-1],digits=3))
+
+
+```
+
+```{r comparision-roc}
+
+dt <-  predict(train.tree, WAUS.test, type = "vector")
+nb <-  predict(NB.Model, WAUS.test, type = "raw")
+bag<-  predict(bag.train, WAUS.test, type = "vector")
+boosting <-  predict(boosting.train, WAUS.test, type = "vector")
+rf <-  predict(rf.train, WAUS.test, type = "prob")
+
+dt.roc <- roc(WAUS.test$CloudTomorrow,dt[,2])
+nb.roc <-roc(WAUS.test$CloudTomorrow,nb[,2]) 
+bag.roc <-roc(WAUS.test$CloudTomorrow,bag$prob[,2])
+boosting.roc <-roc(WAUS.test$CloudTomorrow,boosting$prob[,2])
+rf.roc <-roc(WAUS.test$CloudTomorrow,rf[,2])
+
+color = c("red","#0000ff","#4cd7d0","yellow","black")
+plot( dt.roc,  col = color[1])
+plot( nb.roc, add= T, col = color[2])
+plot(bag.roc , add= T, col = color[3])
+plot( boosting.roc, add= T, col = color[4])
+plot( rf.roc, add= T, col = color[5])
+legend("topleft",legend = c("DT", "NB","Bag","Boosting","RF"), lty = 1,col = color[1:5],cex=0.8,
+       title="Model types", text.font=4, bg='white')
+
+```
+```{r comparision-auc}
+ auc.dt <- as.data.frame( auc(dt.roc)) %>%mutate(model = "DT") %>% 
+  rename(AUC = `auc(dt.roc)`)
+ auc.nb <-  as.data.frame(auc(nb.roc))%>%mutate(model = "NB") %>% 
+  rename(AUC = `auc(nb.roc)`) 
+ auc.bag <-  as.data.frame(auc(bag.roc))%>%mutate(model = "Bag") %>% 
+  rename(AUC =`auc(bag.roc)` )
+ auc.boosting <-  as.data.frame(auc(boosting.roc))%>%mutate(model = "Boosting") %>% 
+  rename(AUC =`auc(boosting.roc)` )
+ auc.rf <- as.data.frame( auc(rf.roc))%>%mutate(model = "RF") %>% 
+  rename(AUC = `auc(rf.roc)`)
+
+table.all <-  auc.dt %>% rbind( auc.nb,auc.bag,auc.boosting,auc.rf) %>% select(-model)
+ table.all <- pf.All %>% select(-Specificity) %>% cbind(table.all)
+ table.all = table.all[,1] %>% cbind( round(table.all[,-1],digits=3) ) %>% rename(Model = ".")
+
+knitr::kable(table.all) 
+ 
+
+```
+```{r feature-importance}
+library("viridis")           # Load
+importance <- as.data.frame( bag.train$importance)
+importance <-importance %>% cbind( as.data.frame( boosting.train$importance)) %>% rownames_to_column()
+importance <-importance %>% full_join(as.data.frame( rf.train$importance) %>% rownames_to_column() )
+importance <- importance [,1]%>% cbind(  scale(importance[,-1]))
+importance <- as.data.frame(importance)  %>% rename(Variable=".", 
+                                                    Bag ="bag.train$importance",
+                                                    Boosting ="boosting.train$importance",
+                                                    RF = "MeanDecreaseGini")
+
+importance <- importance %>% pivot_longer(cols= -Variable,names_to = "Model", values_to = "Values")
+importance[,3] <- as.numeric(unlist( importance[,3])) 
+importance [,3]<-round(importance[,3],digits = 3)
+  
+ggplot(importance, aes(x= Variable, y=Values, fill=Variable ))+
+  geom_col(width = .5)+
+  facet_wrap(~Model)+
+  theme(axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+    scale_fill_viridis(discrete = TRUE) 
+
+
+
+ggplot(importance, aes(x = Variable, y =Values, colour = Model, group = Model)) +
+  geom_point()+
+  geom_line()+
+  theme_classic()+
+  labs(y = "Gini index")+
+  theme(axis.text.y =element_blank(),
+        axis.ticks.y =  element_blank(),
+        axis.text.x = element_text(angle = 45, vjust =1, hjust=1),
+        legend.position=c(1,1),legend.justification = c(1,1))+
+  geom_hline(yintercept = 0.3, linetype="dashed", color = "red")+
+    geom_text(aes(15,0.3,label = "Threshold value = 0.3", vjust = 1.2))
+```
+
+============================================ improved model 
+
+============================================ DT improved
+```{r improved-model }
+x <- c(13,1, 5, 9,10,6,19)
+df.improved.test <- WAUS.test [,x]
+df.improved.train <- WAUS.train [,x]
+
+fit <- tree(CloudTomorrow ~ .,data = df.improved.train)
+fit.predict <- cv.tree(fit,	FUN	=	prune.misclass)
+# 3 is the best size
+prune.tree <- 	prune.misclass(fit,	best	=	3)
+prune.train <-  predict(fit, df.improved.test, type="class")
+
+#confusion matrix 
+cm_dt = confusionMatrix(table(observed	=df.improved.test$CloudTomorrow	,	predicted	=	prune.train))
+pf.dt =as.data.frame( cm_dt$byClass[neededPerfomanceIndex])%>% rbind(cm_dt$overall[1])
+pf.dt = pf.dt %>% rownames_to_column()
+cm_dt = as.data.frame(cm_dt$table) 
+cm_dt$model = "DT"
+```
+
+============================================ RF improved
+```{r Ramdom-forest}
+#set.seed(31084222)
+rf.train= randomForest(CloudTomorrow ~. ,data = df.improved.train)
+#test
+rf.predict = predict(rf.train, newdata = df.improved.test, type = "class")
+#computing confusion matrix
+cm_rf = confusionMatrix(table(observed	=df.improved.test$CloudTomorrow	,	predicted	=	rf.predict))
+pf.rf =as.data.frame( cm_rf$byClass[neededPerfomanceIndex])%>% rbind(cm_rf$overall[1])
+pf.rf = pf.rf %>% rownames_to_column()
+cm_rf = as.data.frame(cm_rf$table)
+cm_rf$model = "RF"
+```
+```{r improved-model }
+x <- c(13,1, 5, 9,10,6,19)
+df.improved.test <- WAUS.test [,x]
+df.improved.train <- WAUS.train [,x]
+
+fit <- tree(CloudTomorrow ~ .,data = WAUS.train)
+fit.predict <- cv.tree(fit,	FUN	=	prune.misclass)
+# 3 is the best size
+prune.tree <- 	prune.misclass(fit,	best	=	3)
+prune.train <-  predict(fit, WAUS.test, type="class")
+
+#confusion matrix 
+cm_dt = confusionMatrix(table(observed	=WAUS.test$CloudTomorrow	,	predicted	=	prune.train))
+pf.dt =as.data.frame( cm_dt$byClass[neededPerfomanceIndex])%>% rbind(cm_dt$overall[1])
+pf.dt = pf.dt %>% rownames_to_column()
+cm_dt = as.data.frame(cm_dt$table) 
+cm_dt$model = "DT"
+```
+
+
