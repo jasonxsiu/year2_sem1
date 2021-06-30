@@ -1,0 +1,327 @@
+---
+title: "Assignment 2"
+author: "Jason Ching Yuen Siu"
+date: "`r format(Sys.Date(), '%A, %B %e %Y')`"
+output:
+  pdf_document: default
+  html_document: default
+subtitle: ETC1010_5510
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE, cache.lazy = FALSE )
+```
+
+
+```{r, message = FALSE, warning = FALSE}
+library(naniar)
+library(broom)
+library(ggmap)
+library(knitr)
+library(lubridate)
+library(timeDate)
+library(tsibble)
+library(here)
+library(readr)
+library(tidyverse)
+library(ggResidpanel)
+library(gridExtra)
+
+```
+
+```{r , readingdata, message = FALSE, warning  = FALSE}
+##please set your own working directory if such issues are encountered
+tree_data0 <- read_csv("Data/Assignment_data.csv") 
+```
+
+
+# Part I
+
+# Question 1: Rename the variables *Date Planted* and *Year Planted* to *Dateplanted* and *Yearplanted* using the *rename()* function. Make sure *Dateplanted* is defined as a **date variable**. Then extract from the variable *Dateplanted* the year and store it in a new variable called  *Year*. Display the first 6 rows of the data frame. (5pts)
+
+
+```{r rename-var, eval = T}
+#using rename () to rename  *Date Planted* and *Year Planted* to *Dateplanted* and *Yearplanted*
+tree_data <- tree_data0 %>% 
+  rename(Dateplanted = `Date Planted`,
+         Yearplanted = `Year Planted` )
+#*Dateplanted* is defined as a **date variable**.
+tree_data$Dateplanted <- dmy(tree_data$Dateplanted)
+# new variable as "year"
+tree_data <- tree_data %>% mutate(Year = year( tree_data$Dateplanted))
+#display the 1st 6 rows
+head(tree_data, 6)
+```
+
+# Question 2: Have you noticed any differences between the variables *Year* and *Yearplanted*? Why is that? Demonstrate your claims using R code. Fix the problem if there is one (Hint: Use *ifelse* inside a mutate function to fix the problem and store the data in *tree_data_clean*). After this question, please use the data in *tree_data_clean* to proceed. (3pts)
+
+Why ?
+possibility 1 :Perhaps people mis-input the value 2000 as 1900, therefore, 
+the value of 1900 does not reflect the date planted
+
+Possibility 2 : When the programmer wrangle th data, they did not notice this syntax error
+
+```{r clean-year, eval=T}
+tree_data_clean <- tree_data %>% 
+  mutate(Yearplanted = ifelse(Yearplanted ==Year, Yearplanted, Year))
+
+```
+
+
+
+# Question 3: Investigate graphically the missing values in the variable *Dateplanted* for the last 1000 rows of the data set. What do you observe? (max 30 words) (2pts)
+
+```{r }
+tree_data_singlevariable <- tree_data_clean %>% 
+  select(Dateplanted) %>% 
+  tail(1000)
+vis_miss(tree_data_singlevariable)
+```
+There are no missing values (NA) for last 1000 rows
+
+# Question 4: What is the proportion of missing values in each variable in the tree data set? Display the results in descending order of the proportion. (2pts)
+  
+```{r summary-missing, eval = T}
+miss_var_summary(tree_data_clean) %>% 
+  select(variable,pct_miss)%>% 
+  arrange(desc(pct_miss)) 
+```
+
+# Question 5: How many observations have a missing value in the variable *Dateplanted*? Identify the rows and display the information in those rows. Remove all the rows in the data set of which the variable *Dateplanted* has a missing value recorded and store the data in *tree_data_clean1*. Display the first 4 rows of *tree_data_clean1*. Use R inline code to complete the sentense below. (6pts)
+
+
+
+```{r , eval = T}
+#How many observations have a missing value in the variable *Dateplanted*?
+tree_data_clean %>% select(Dateplanted) %>% n_miss()
+# there are 2 missing values
+tree_data_clean %>% subset(is.na(tree_data_clean$Dateplanted))
+#so remove them
+tree_data_clean1 <- tree_data_clean %>% drop_na(Dateplanted)
+head(tree_data_clean1,4)
+```
+
+The number of rows in the cleaned data set are `r dim(tree_data_clean1)[1]`  and the number of columns are `r dim(tree_data_clean1)[2]`
+
+
+
+# Question 6: Create a map with the tree locations in the data set. (2pts)
+
+```{r , message = FALSE, eval = T}
+# We have created the map below for you
+melb_map <- read_rds(here::here("Data/melb-map.rds"))
+
+# Here you just need to add the location for each tree into the map.
+ggmap(melb_map) +
+  geom_point(data = tree_data_clean1, 
+             aes(x =Longitude , 
+                 y = Latitude),
+             colour = "#006400", 
+             alpha = 0.6, 
+             size = 0.2)
+
+```
+
+# Question 7: Create another map and draw trees in the *Genus* groups of Eucalyptus, Macadamia, Prunus, Acacia, and Quercus. Use the "Dark2" color palette and display the legend at the bottom of the plot. (8pts)
+
+```{r , eval = T}
+#Create another map and draw trees in the *Genus* groups of Eucalyptus, Macadamia, Prunus, Acacia, and Quercus.
+GenusSelected <- c("Eucalyptus","Macadamia","Prunus","Acacia","Quercus") 
+selected_group <- tree_data_clean1 %>% filter(Genus %in% GenusSelected)
+  
+melb_map <- read_rds(here::here("Data/melb-map.rds"))
+
+# Here you just need to add the location for each tree into the map.
+ggmap(melb_map) +
+  geom_point(data = selected_group, 
+             aes(x = Longitude, 
+                 y = Latitude,
+                 colour = Genus),
+             palette = "Dark2", 
+             alpha = 1, 
+             size = 1)+
+  theme(legend.position = "bottom")
+```
+
+
+# Question 8: Filter the data *tree_data_clean1* so that only the variables *Year*, *Located in*, and *Common Name* are displayed. Arrange the data set by *Year* in descending order and display the first 4 lines. Call this new data set *tree_data_clean_filter*. Then answer the following question using inline R code: When (*Year*), where (*Located in*) and what tree (*Common Name*) was the first tree planted in Melbourne according to this data set? (8pts)
+
+```{r , eval = T}
+#Filter the data *tree_data_clean1* so that only the variables *Year*, *Located in*, and *Common Name* are displayed. Arrange the data set by *Year* in descending order
+tree_data_clean_filter <- tree_data_clean1 %>% 
+  select(Year, `Located in`,`Common Name`) %>% 
+  arrange(desc(Year)) 
+#display the first 4 lines
+head(tree_data_clean_filter,4)
+```
+
+
+The first tree was planted in `r head(tree_data_clean_filter[,1],1)`  at a `r head(tree_data_clean_filter[,2],1)` and the tree name is `r head(tree_data_clean_filter[,3],1)`
+
+
+# Question 9: How many trees were planted in parks and how many in streets? Tabulate the results (only for locations in parks and streets) using the function *kable()* from the *kableExtra* R package. (3pts)
+
+```{r , eval = T}
+library(kableExtra)
+kable(
+  tree_data_clean1 %>% 
+    group_by(`Located in`) %>% 
+    filter(`Located in` !="NA") %>% 
+    summarise(Count=n())
+  )
+  
+```
+
+
+# Question 10: How many trees are there in each of the Family groups in the data set *tree_data_clean1* (display the first 5 lines of the results in descending order)? (2pt)
+
+```{r , eval = T}
+head( 
+  tree_data_clean1 %>% 
+    group_by(Family) %>% 
+    summarise(Count = n()) %>%
+    arrange(desc(Count)) 
+      ,5)
+  
+```
+
+
+
+
+# Question 11: Create a markdown table displaying the number of trees planted in each year (use variable *Yearplanted*) with common names Ironbark, Olive, Plum, Oak, and Elm (Hint: Use kable() from the gridExtra R package). What is the oldest most abundant tree in this group? (8pts)
+
+
+```{r , eval = T}
+#displaying the number of trees planted in each year
+#with common names Ironbark, Olive, Plum, Oak, and Elm
+cNameSelected <- c("Ironbark","Olive","Plum","Oak","Elm")
+
+tree_year<-tree_data_clean1 %>% 
+   filter(`Common Name` %in% cNameSelected)%>%  
+   select(Yearplanted,`Common Name`) %>%   
+   group_by(Yearplanted,`Common Name`) %>%
+   count(Yearplanted,`Common Name`) 
+
+kable(tree_year)
+  
+tree_year %>% arrange(desc(n))%>%  select(`Common Name`) %>% head(1)
+```
+The oldest most abundant tree in this group is Elm
+
+
+# Question 12: Select the trees with diameters (Diameter Breast Height) greater than 40 cm and smaller 100 cm and comment on where the trees are located (streets or parks). (max 25 words) (3pts)
+```{r , eval = T}
+large_trees_data <- tree_data_clean1 %>%
+  filter(`Diameter Breast Height`>40 & `Diameter Breast Height`<100) %>% group_by(`Located in`) %>% summarise(Count=n())
+```
+  There are `r large_trees_data[1,2]` located on Park, `r large_trees_data[2,2]` located on Street
+
+# Question 13: Plot the trees within the diameter range that you have selected in Question 12, which are located in parks and streets on a map using 2 different colours to differentiate their locations (streets or parks). (6pts)
+
+```{r , eval = T}
+large_trees_data_parks <- tree_data_clean1 %>%
+  filter(`Diameter Breast Height`>40 & `Diameter Breast Height`<100) 
+  
+```  
+
+
+```{r, message = FALSE, warning = FALSE, eval = T}
+ggmap(melb_map) +
+             geom_point(data = large_trees_data_parks, 
+             aes(x = Longitude , 
+                 y = Latitude,
+                 color =`Located in` ),
+             alpha = 0.6, 
+           size = 0.2, 
+           palette="Dark2")+
+  theme(legend.position = "bottom")
+```
+
+
+
+# Question 14: Create a time series plot (using geom_line) that displays the total number of trees planted per year in the data set *tree_data_clean1* that belong to the Families:  Myrtaceae, Arecaceae, and Ulmaceae. What do you observe from the plot? (6pts)
+
+```{r , eval = T}
+Fig_data <- tree_data_clean1 %>% select(Dateplanted,Family)%>% filter(Family == c('Myrtaceae', 'Arecaceae','Ulmaceae'))  %>% count(Dateplanted,Family)
+
+ggplot(Fig_data,aes(x = Dateplanted,y = n,color = Family))+geom_line()
+```
+
+
+# Part 2: Simulation Exercise
+
+==
+#  Question 15: Create a data frame called *simulation_data* that contains 2 variables with names *response* and *covariate*. Generate the variables according to the following model: $response = 3.5 \times covariate + epsilon$ where *covariate* is a variable that takes values $0, 1, 2, \ldots, 100$ and $\epsilon$ is generated according to a Normal distribution (Hint: Use the function *rnorm()* to generate $epsilon$.) (3pts)
+
+
+```{r norm , eval = T}
+set.seed(2021)
+covariate <- c(0:100)
+epsilon <- rnorm(101)
+response <- 3.5 * covariate + epsilon
+simulation_data <- tibble(response,covariate)
+
+```
+
+
+# Question 16: Display graphically the relationship between the variables *response* and *covariate* (1pt) using a point plot. Which kind of relationship do you observe? (2pts)
+
+```{r}
+ggplot(simulation_data,aes(response,covariate))+
+  geom_point()+ 
+  ggtitle("The relationship between the variables response and covariate")+
+  geom_smooth()
+#there is a positive relationship
+```
+
+
+
+# Question 17: Fit a linear model between the variables *response* and *covariate* that you generate in Question 15 and display the model summary. (2pts)
+```{r lm}
+fit <- lm(response~covariate, data = simulation_data)
+summary(fit)
+```
+
+
+
+# Question 18: What are the values for the intercept and the slope in the estimated model in Question 17 (Hint: Use the function *coef()*)? How do these values compare with the values in the simulation model? (max 50 words) (2pts)
+```{r slope-intercept}
+coef(fit)[2] #slope
+coef(fit)[1] #intercept
+```
+The values of the intercept and slope are `coef(fit)[1]` and `coef(fit)[2]`.
+
+The formula y = `r coef(fit)[2]`x + `r coef(fit)[1] ` gives us fitted values that are closest to the actual
+values in the sense that the length of the residual vector is the
+smallest possible.
+
+
+# Question 19: Create a figure to display the diagnostic plots of the linear model that you fit in Question 17. Comment on the diagnostic plots (max 50 words). Is this a good/bad model and why? (max 30 words) (4pts)
+
+```{r}
+library(ggResidpanel)
+resid_panel(fit, plots = "all")
+```
+
+
+
+It is a good model given that : 
+   1. The points in Residual plots are of no patterns
+   2. The points in QQ plot lies on the blue line, meaning normal distribution
+   3. There are no points lying below the cook's distance contour line
+   4. All the predicted values are same as the actual values 
+
+
+
+
+# Question 20: Report R2, Radjusted, AIC, and BIC. Is this a good/bad model? Please explain your answer. (max 30 words) (2pts)
+```{r}
+glance(fit)
+```
+It is a generally a good linear model given that :
+ 1. perfect score for R2 (99%)
+
+However, since there is no other models to compare, using AIC and BIC, We do not know if this model is good enough.
+
+
+
