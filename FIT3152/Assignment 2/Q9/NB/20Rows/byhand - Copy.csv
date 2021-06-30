@@ -1,0 +1,21 @@
+Y = Cloudy,,Humidity,P(Humidity|Y) ,Temperture,P(Temperture|Y) ,Sunshine,P(Sunshine|Y) ,Windy,P(Windy|Y) ,CloudTomorrow,,,,,,
+,1,No,0.67,Not cold,1,No,1,No,1,0.67,,,,,,
+,2,Yes,0.33,Not cold,1,No,1,No,1,0.33,,,,,,
+,3,No,0.67,Cold,0,No,1,No,1,0,,,,,,
+,4,Yes,0.33,Not cold,1,No,1,No,1,0.33,,,,,,
+,5,Yes,0.33,Not cold,1,No,1,No,1,0.33,,,,,,
+,6,Yes,0.33,Not cold,1,No,1,No,1,0.33,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+N = Not Cloudy,,Humidity,,Temperture,,Sunshine,,Windy,,CloudTomorrow,,Cloudy,NC,,Actual Result,Predicted Result
+,1,No,0.625,Not cold,0.5,No,1,No,1,0.3125,,0.287142857,0.178571429,,No,Yes
+,2,Yes,0.375,Not cold,0.5,No,1,No,1,0.1875,,0.141428571,0.107142857,,Yes,Yes
+,3,No,0.625,Cold,0.5,No,1,No,1,0.3125,,0,0.178571429,,No,No
+,4,Yes,0.375,Not cold,0.5,No,1,No,1,0.1875,,0.141428571,0.107142857,,No,Yes
+,5,Yes,0.375,Not cold,0.5,No,1,No,1,0.1875,,0.141428571,0.107142857,,No,Yes
+,6,Yes,0.375,Not cold,0.5,No,1,No,1,0.1875,,0.141428571,0.107142857,,Yes,Yes
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,Cloudy,0.428571429,,,,,,,,,,,,,,
+,Not Cloudy,0.571428571,,,,,,,,,,,,,,

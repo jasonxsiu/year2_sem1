@@ -1,0 +1,833 @@
+---
+output:
+  html_document: default
+  word_document: default
+---
+import the needed lib
+```{r include=F}
+library(tidyverse)
+library(simputation) #imputation
+library(naniar)
+library(lubridate)
+library(tidymodels)
+library(modeest) # find mode
+library(e1071) #Naïve Bayes
+library(ROCR)
+library(pROC)
+library(tree)
+library(skimr) # data exploratory
+library(psych)  #for general functions
+library(GGally)
+library(magrittr)
+library(flextable)
+```
+
+read file
+```{r read-file}
+rm(list = ls()) 
+WAUS <- read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Assignment 2/data.csv",
+                 stringsAsFactors = T)
+WAUS <- WAUS %>% filter(CloudTomorrow != "NA") #remove the rows in which the value of CloudTmr is NA
+L <- as.data.frame(c(1:49)) 
+set.seed(31084222) # Your Student ID is the random seed 
+L <- L[sample(nrow(L), 10, replace = FALSE),] # sample 10 locations ====
+WAUS <- WAUS[(WAUS$Location %in% L),] 
+WAUS <- WAUS[sample(nrow(WAUS), 2000, replace = FALSE),] # sample 2000 rows 
+WAUS$CloudTomorrow = as.factor(WAUS$CloudTomorrow)
+```
+
+
+============================================Explore data
+Since we are predicting the cloudiness, there is no use of Location, Date, thus removing them 
+```{r feature-selection}
+#date format
+WAUS$Date = ""
+WAUS$Day = as.character(WAUS$Day)
+WAUS$Month = as.character(WAUS$Month)
+WAUS$Year = as.character(WAUS$Year)
+WAUS$Date =paste(WAUS$Year,"-" ,WAUS$Month,"-", WAUS$Day)
+WAUS$Date = ymd(WAUS$Date)
+WAUS= WAUS %>% arrange(Date)
+WAUS <- WAUS  %>% select(-Location,-Day,-Year,-Month,-Date)
+```
+```{r explore-data, include=T}
+summary <- skim(WAUS)
+summary[,c(1:9,15)]
+
+kable = knitr::kable(summary[,c(1:9,15)])
+
+```
+
+```{r}
+par(mar=c(3,6,3,3))
+numScaleWAUS =as.data.frame(scale(select_if(WAUS,is.numeric)))
+lablist.x<-as.vector(names(numScaleWAUS))
+boxplot(numScaleWAUS
+ , horizontal=T,yaxt = "n",xaxt = "n",frame=T,outbg = "blue",outpch = 21# Outliers symbol
+,main= "Boxplot for all numeric variables in WAUS"        )
+#stripchart(numScaleWAUS, add = TRUE, col = "blue")
+text(y = seq(1, 14, by=1), par("usr")[1] -2, labels = lablist.x, srt = 45, pos = 1, xpd = TRUE)
+```
+
+
+
+============================================ preprocessing
+clean the data 
+
+impute the data
+```{r imputate-data}
+
+
+     #       WAUS$MinTemp = impute_mean( WAUS$MinTemp) 
+     #    WAUS$MaxTemp= impute_mean( WAUS$MaxTemp) 
+     #   WAUS$Rainfall=  impute_median( WAUS$Rainfall) 
+     #   WAUS$Evaporation=  impute_median( WAUS$Evaporation) 
+     #  WAUS$Sunshine=   impute_mean( WAUS$Sunshine) 
+     #  WAUS$WindGustSpeed=   impute_mean( WAUS$WindGustSpeed) 
+     #   WAUS$WindSpeed9am=  impute_mean( WAUS$WindSpeed9am) 
+     #   WAUS$WindSpeed3pm=  impute_mean( WAUS$WindSpeed3pm) 
+     #  WAUS$Humidity9am=   impute_mean( WAUS$Humidity9am) 
+     #  WAUS$Humidity3pm=   impute_mean( WAUS$Humidity3pm) 
+     #  WAUS$Pressure9am =   impute_mean( WAUS$Pressure9am) 
+     # WAUS$Pressure3pm =   impute_mean( WAUS$Pressure3pm) 
+     #     WAUS$Temp9am =   impute_mean( WAUS$Temp9am) 
+     # WAUS$Temp3pm =   impute_mean( WAUS$Temp3pm) 
+     
+
+   #drop all categorical values becuase they cannot be found
+WAUS = WAUS %>% drop_na()
+```
+
+set-seed
+```{r set-seed}
+ 
+ set.seed(31084222) #Student ID as random seed 
+ train.row = sample(1:nrow(WAUS), 0.7*nrow(WAUS)) 
+ WAUS.train = WAUS[train.row,] 
+ WAUS.test = WAUS[-train.row,] 
+
+ 
+```
+
+data pre-processing 
+```{ visualise }
+ggpairs(select_if(WAUS, is.numeric) ,cardinality_threshold=NULL )
+```
+
+
+
+```{r lib, include=F}
+library(caret)  #for training and cross validation (also calls other model libarie
+library(rpart)  #for trees
+library(rpart.plot)             # Enhanced tree plots
+library(RColorBrewer)       # Color selection for fancy tree plot
+library(party)                  # Alternative decision tree algorithm
+library(partykit)               # Convert rpart object to BinaryTree
+library(pROC)   #for ROC curves
+library(adabag)
+library(randomForest)
+```
+
+
+
+
+============================================ Naive bases
+```{r NB}
+#set.seed(31084222)
+NB.Model=naiveBayes(CloudTomorrow~.,data=WAUS.train)
+NB.predict=predict(NB.Model,WAUS.test, type = "class")
+#computing confusion matrix
+neededPerfomanceIndex = c(1,2,5,6,12)
+
+cm_NB = confusionMatrix(table(observed	= WAUS.test$CloudTomorrow	,	predicted	=	NB.predict))
+pf.NB =as.data.frame(  cm_NB$byClass[neededPerfomanceIndex])%>% rbind(cm_NB$overall[1])
+pf.NB = pf.NB %>% rownames_to_column()
+cm_NB = as.data.frame(cm_NB$table)
+cm_NB$model = "NB"
+
+```
+============================================ Decision tree
+```{r cv}
+#setting up cross-validation
+cvcontrol <- trainControl(method="repeatedcv", number = 10,
+                          allowParallel=TRUE)
+```
+
+```{r DT}
+#set.seed(31084222)
+train.tree <- tree(CloudTomorrow ~ ., 
+                   data=WAUS.train)
+
+
+#To evalaute the accuracy of the tree we can look at the confusion matrix for the Training data. 
+#obtaining class predictions
+tree.classTrain <-  predict(train.tree, WAUS.test, type="class")
+#confusion matrix 
+cm_dt = confusionMatrix(table(observed	=WAUS.test$CloudTomorrow	,	predicted	=	tree.classTrain))
+pf.dt =as.data.frame( cm_dt$byClass[neededPerfomanceIndex])%>% rbind(cm_dt$overall[1])
+pf.dt = pf.dt %>% rownames_to_column()
+cm_dt = as.data.frame(cm_dt$table) 
+cm_dt$model = "DT"
+
+
+```
+
+
+============================================ Bagging
+```{r bag}
+#set.seed(31084222)
+bag.train= bagging(CloudTomorrow ~. ,data = WAUS.train, mfinal = 6)
+#test
+bagging.predict = predict.bagging(bag.train, newdata = WAUS.test,
+                                  type = "class")
+
+# confusion matrix
+#computing confusion matrix
+cm_bag = confusionMatrix(table(observed	=WAUS.test$CloudTomorrow	,	predicted	=	bagging.predict$class))
+pf.bag =as.data.frame( cm_bag$byClass[neededPerfomanceIndex])%>% rbind(cm_bag$overall[1])
+pf.bag = pf.bag %>% rownames_to_column()
+cm_bag = as.data.frame(cm_bag$table)
+cm_bag$model = "Bagging"
+pf.bag
+
+```
+
+============================================ Boosting
+
+```{r boosting}
+#set.seed(31084222)    
+boosting.train= boosting(CloudTomorrow ~. ,data = WAUS.train, mfinal = 7)
+
+#test
+boosting.predict = predict.boosting(boosting.train, newdata = WAUS.test, type = "class")
+
+# confusion matrix
+cm_boosting  =confusionMatrix(table(observed	=WAUS.test$CloudTomorrow	,	predicted	=	boosting.predict$class))
+pf.boosting =as.data.frame( cm_boosting$byClass[neededPerfomanceIndex])%>% rbind(cm_boosting$overall[1])
+pf.boosting = pf.boosting %>% rownames_to_column()
+cm_boosting = as.data.frame(cm_boosting$table)
+cm_boosting$model = "Boosting"
+
+pf.boosting
+```
+
+============================================ RF
+```{r Ramdom-forest}
+#set.seed(31084222)
+rf.train= randomForest(CloudTomorrow ~. ,data = WAUS.train)
+#test
+rf.predict = predict(rf.train, newdata = WAUS.test, type = "class")
+#computing confusion matrix
+cm_rf = confusionMatrix(table(observed	=WAUS.test$CloudTomorrow	,	predicted	=	rf.predict))
+pf.rf =as.data.frame( cm_rf$byClass[neededPerfomanceIndex])%>% rbind(cm_rf$overall[1])
+pf.rf = pf.rf %>% rownames_to_column()
+cm_rf = as.data.frame(cm_rf$table)
+cm_rf$model = "RF"
+```
+============================================ Comparision
+
+
+
+```{r comparision-confusion-matrix}
+confMatrix =cm_dt %>% 
+  rbind( cm_rf,cm_boosting, cm_bag, cm_NB) 
+```
+
+```{r comparision-performance}
+pf.dt = pf.dt %>% 
+  rename(Performance = `cm_dt$byClass[neededPerfomanceIndex]` ) %>% 
+  mutate(model = "DT" )
+pf.dt[6,1] = "Accuracy"
+#make FPR
+pf.dt[7,2] = 1- pf.dt[2,2] 
+pf.dt[7,3] = "DT"
+pf.dt[7,1] = "FPR"
+
+
+pf.NB = pf.NB %>% 
+  rename(Performance = `cm_NB$byClass[neededPerfomanceIndex]` ) %>% 
+  mutate(model = "NB")
+pf.NB[6,1] = "Accuracy"
+pf.NB [7,2] = 1- pf.NB [2,2] 
+pf.NB [7,3] = "NB"
+pf.NB [7,1] = "FPR"
+
+pf.bag = pf.bag %>% 
+  rename(Performance = `cm_bag$byClass[neededPerfomanceIndex]` ) %>% 
+  mutate(model = "Bag")
+pf.bag[6,1] = "Accuracy"
+pf.bag [7,2] = 1- pf.bag [2,2] 
+pf.bag [7,3] = "Bag"
+pf.bag [7,1] = "FPR"
+
+pf.boosting = pf.boosting %>% 
+  rename(Performance = `cm_boosting$byClass[neededPerfomanceIndex]` ) %>% 
+  mutate(model = "Boosting")
+pf.boosting[6,1] = "Accuracy"
+pf.boosting[7,2] = 1- pf.boosting[2,2] 
+pf.boosting[7,3] = "Boosting"
+pf.boosting[7,1] = "FPR"
+
+pf.rf = pf.rf %>% 
+  rename(Performance = `cm_rf$byClass[neededPerfomanceIndex]` ) %>% 
+  mutate(model = "RF")
+pf.rf[6,1] = "Accuracy"
+pf.rf [7,2] = 1- pf.rf [2,2] 
+pf.rf [7,3] = "RF"
+pf.rf [7,1] = "FPR"
+
+
+pf.All = pf.dt %>% rbind(pf.NB,pf.bag,pf.boosting,pf.rf) %>% 
+  filter( Performance != is.na(Performance))
+
+pf.All = pf.All %>% pivot_wider(names_from =rowname, values_from =Performance )  
+
+pf.All = pf.All[,1] %>% cbind(round(pf.All[,-1],digits=3))
+
+
+```
+
+```{r comparision-roc}
+
+dt <-  predict(train.tree, WAUS.test, type = "vector")
+nb <-  predict(NB.Model, WAUS.test, type = "raw")
+bag<-  predict(bag.train, WAUS.test, type = "vector")
+boosting <-  predict(boosting.train, WAUS.test, type = "vector")
+rf <-  predict(rf.train, WAUS.test, type = "prob")
+
+dt.roc <- roc(WAUS.test$CloudTomorrow,dt[,2])
+nb.roc <-roc(WAUS.test$CloudTomorrow,nb[,2]) 
+bag.roc <-roc(WAUS.test$CloudTomorrow,bag$prob[,2])
+boosting.roc <-roc(WAUS.test$CloudTomorrow,boosting$prob[,2])
+rf.roc <-roc(WAUS.test$CloudTomorrow,rf[,2])
+
+color = c("red","#0000ff","#4cd7d0","green","black")
+plot( dt.roc,  col = color[1], main="ROC curve for each classifier")
+plot( nb.roc, add= T, col = color[2])
+plot(bag.roc , add= T, col = color[3])
+plot( boosting.roc, add= T, col = color[4])
+plot( rf.roc, add= T, col = color[5])
+legend("topleft",legend = c("DT", "NB","Bag","Boosting","RF"), lty = 1,col = color[1:5],cex=0.8,
+       title="Model types", text.font=4, bg='white')
+
+
+
+```
+```{r comparision-auc}
+ auc.dt <- as.data.frame( auc(dt.roc)) %>%mutate(model = "DT") %>% 
+  rename(AUC = `auc(dt.roc)`)
+ auc.nb <-  as.data.frame(auc(nb.roc))%>%mutate(model = "NB") %>% 
+  rename(AUC = `auc(nb.roc)`) 
+ auc.bag <-  as.data.frame(auc(bag.roc))%>%mutate(model = "Bag") %>% 
+  rename(AUC =`auc(bag.roc)` )
+ auc.boosting <-  as.data.frame(auc(boosting.roc))%>%mutate(model = "Boosting") %>% 
+  rename(AUC =`auc(boosting.roc)` )
+ auc.rf <- as.data.frame( auc(rf.roc))%>%mutate(model = "RF") %>% 
+  rename(AUC = `auc(rf.roc)`)
+
+table.all <-  auc.dt %>% rbind( auc.nb,auc.bag,auc.boosting,auc.rf) %>% select(-model)
+ table.all <- pf.All %>% select(-Specificity) %>% cbind(table.all)
+ table.all = table.all[,1] %>% cbind( round(table.all[,-1],digits=3) ) %>% rename(Model = ".")
+
+knitr::kable(table.all) 
+ 
+
+```
+```{r feature-importance}
+library("viridis")           # Load
+importance <- as.data.frame( bag.train$importance)
+importance <-importance %>% cbind( as.data.frame( boosting.train$importance)) %>% rownames_to_column()
+importance <-importance %>% full_join(as.data.frame( rf.train$importance) %>% rownames_to_column() )
+importance <- importance [,1]%>% cbind(  scale(importance[,-1]))
+importance <- as.data.frame(importance)  %>% rename(Variable=".", 
+                                                    Bag ="bag.train$importance",
+                                                    Boosting ="boosting.train$importance",
+                                                    RF = "MeanDecreaseGini")
+
+importance <- importance %>% pivot_longer(cols= -Variable,names_to = "Model", values_to = "Values")
+importance[,3] <- as.numeric(unlist( importance[,3])) 
+importance [,3]<-round(importance[,3],digits = 3)
+  
+
+
+ggplot(importance, aes(x = Variable, y =Values, colour = Model, group = Model)) +
+  geom_point()+
+  geom_line()+
+  theme_classic()+
+  labs(y = "Gini index")+
+  theme(axis.text.y =element_blank(),
+        axis.ticks.y =  element_blank(),
+        axis.text.x = element_text(angle = 45, vjust =1, hjust=1),
+        legend.position=c(1,1),legend.justification = c(1,1))+
+  geom_hline(yintercept = mean(importance$Values), linetype="dashed", color = "red")+
+    geom_text(aes(15,0,label = "Threshold value = mean ", vjust = 1.2))
+
+ggplot(importance, aes(x = Variable, y =Values, colour = Model, group = Model)) +
+  geom_point()+
+  geom_line()+
+  theme_classic()+
+  labs(y = "Gini index")+
+  theme(axis.text.y =element_blank(),
+        axis.ticks.y =  element_blank(),
+        axis.text.x = element_text(angle = 45, vjust =1, hjust=1),
+        legend.position=c(1,1),legend.justification = c(1,1))+
+  geom_hline(yintercept = 0.3, linetype="dashed", color = "red")+
+    geom_text(aes(15,0.3,label = "Threshold value = 0.3", vjust = 1.2))
+```
+
+============================================ improved model 
+
+============================================ DT improved
+```{r improved-model }
+x <- c(13,1, 5, 9,10,6,19)
+df.improved.test <- WAUS.test [,x]
+df.improved.train <- WAUS.train [,x]
+
+fit <- tree(CloudTomorrow ~ .,data = df.improved.train)
+fit.predict <- cv.tree(fit,	FUN	=	prune.misclass)
+# 3 is the best size
+prune.tree <- 	prune.misclass(fit,	best	=	3)
+prune.train <-  predict(fit, df.improved.test, type="class")
+
+#confusion matrix 
+cm_dt = confusionMatrix(table(observed	=df.improved.test$CloudTomorrow	,	predicted	=	prune.train))
+pf.dt =as.data.frame( cm_dt$byClass[neededPerfomanceIndex])%>% rbind(cm_dt$overall[1])
+pf.dt = pf.dt %>% rownames_to_column()
+cm_dt = as.data.frame(cm_dt$table) 
+cm_dt$model = "DT"
+```
+
+============================================ RF improved
+```{ Ramdom-forest-Random}
+set.seed(1234)
+control <- trainControl(method = "repeatedcv", 
+                        number =10,#10 folds
+                        repeats = 3, 
+                        search = "random")
+rf_random <-  train(CloudTomorrow~ . ,  
+                    data = df.improved.train, 
+                    method = "rf",
+                    metric = "Accuracy",
+                    tuneLength = 15,
+                    trControl = control
+                    )
+
+```
+```{ RF-grid}
+set.seed(1234)
+control <- trainControl(method = "repeatedcv", 
+                        number =10,#10 folds
+                        repeats = 3, 
+                        search = "grid")
+
+tunegrid <-  expand.grid(.mtry = c(1:15))
+rf_grid <-  train(CloudTomorrow~ . ,  
+                    data = df.improved.train, 
+                    method = "rf",
+                    metric = "Accuracy",
+                    tuneGrid = tunegrid,
+                    trControl = control
+                    )
+
+```
+
+```{ improved-model }
+x <- c(13,1, 5, 9,10,6,19)
+df.improved.test <- WAUS.test [,x]
+df.improved.train <- WAUS.train [,x]
+
+fit <- tree(CloudTomorrow ~ .,data = WAUS.train)
+fit.predict <- cv.tree(fit,	FUN	=	prune.misclass)
+# 3 is the best size
+prune.tree <- 	prune.misclass(fit,	best	=	3)
+prune.train <-  predict(fit, WAUS.test, type="class")
+
+#confusion matrix 
+cm_dt = confusionMatrix(table(observed	=WAUS.test$CloudTomorrow	,	predicted	=	prune.train))
+pf.dt =as.data.frame( cm_dt$byClass[neededPerfomanceIndex])%>% rbind(cm_dt$overall[1])
+pf.dt = pf.dt %>% rownames_to_column()
+cm_dt = as.data.frame(cm_dt$table) 
+cm_dt$model = "DT"
+```
+
+
+
+```{r ANN}
+library(neuralnet)
+library(dummies)
+x <- c(14, 15,1, 5, 11,10,19)
+
+nn.train = WAUS.train[,x]
+nn.test = WAUS.test[,x]
+
+#make all factoed variable as dummy variables
+nn.train <- dummy.data.frame(nn.train)
+nn.test <-   dummy.data.frame(nn.test)
+
+nn <- neuralnet(	CloudTomorrow0 + CloudTomorrow1 ~ . ,data = nn.train,hidden=3)
+plot(nn, rep="best")
+
+nn$result.matrix
+
+#================ predict
+nn.pred =	compute(nn,	nn.test)
+#	round	the	predictions	to	0	or	1
+nn.predr =	round(nn.pred$net.result,0)
+#	make	data	frame	of	A,	B,	C,	classified	0	or	1
+nn.predr.df =	as.data.frame(as.table(nn.predr))
+ #	remove	rows	classified	0	- leave	only	classified	1
+ nn.predr.dfs =	nn.predr.df[!nn.predr.df$Freq==0,]
+ 
+ 
+ nn.predr.dfs$Freq =NULL
+colnames(nn.predr.dfs)=c("Obs","Cloudy")
+nn.predr.dfs =nn.predr.dfs[order(nn.predr.dfs$Obs),]
+table(observed=nn.test$CloudTomorrow1,predicted=nn.predr.dfs$Cloudy)
+
+
+```
+
+
+
+```{r by-hand-model}
+#variable index which beyond the mean of importance
+x <- c(14, 15,1, 5, 11,10,19)
+
+#since WindDir3pm and WindDirGust are not independent, I will drop one of them
+  byhand = WAUS.train[,x] 
+   set.seed(31084222) #Student ID as random seed 
+sample_data = sample_n(byhand, size = 20, replace = T)
+#if Humidity3pm > 50, it means that day is humid
+sample_data$Pressure = ifelse(sample_data$Pressure3pm> 1013&
+                                sample_data$Pressure3pm>1013 ,
+                              "High","Not High")
+#if MinTemp < 10 degree c, it means that day is cold
+sample_data$MinTemp = ifelse(sample_data$MinTemp< 10 ,"Cold","Not Cold")
+#if Sunshine hour > 12 , it means that day is sunny
+sample_data$Sunshine = ifelse(sample_data$Sunshine > 12 ,"Sunny","Not Sunny")
+#if WindSpeed9am > 15 , it means that day is Windy
+sample_data$Windy = ifelse((sample_data$WindSpeed9am > 5 && sample_data$WindSpeed3pm >5),"Windy","Not Windy")
+sample_data$CloudTomorrow = ifelse(sample_data$CloudTomorrow == 1, "Cloudy", "Not Cloudy")
+sample_data <- sample_data%>% select( -WindSpeed3pm,-WindSpeed9am, -Pressure9am,-Pressure3pm)
+
+     set.seed(31084222) #Student ID as random seed 
+     
+ train.row = sample(1:nrow(sample_data), .7*nrow(sample_data)) 
+ byhand.train = sample_data[train.row,] 
+ byhand.test = sample_data[-train.row,] 
+ 
+# write.csv(byhand.train, file = "C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Assignment 2/csv/byhand.csv")
+ 
+```
+
+
+```{r by-hand-model-testing}
+x <- c(13,1, 5, 11,10,19)
+
+#since WindDir3pm and WindDirGust are not independent, I will drop one of them
+sample.data.train= WAUS.train[,x] 
+#if Humidity3pm > 50, it means that day is humid
+sample.data.train$Humidity3pm = ifelse(sample.data.train$Humidity3pm> 50 ,"Yes","No")
+#if MinTemp < 10 degree c, it means that day is cold
+sample.data.train$MinTemp = ifelse(sample.data.train$MinTemp< 10 ,"Yes","No")
+#if Sunshine hour > 12 , it means that day is sunny
+sample.data.train$Sunshine = ifelse(sample.data.train$Sunshine > 12 ,"Yes","No")
+#if WindSpeed9am > 15 , it means that day is Windy
+sample.data.train$WindSpeed9am = ifelse(
+  ((sample.data.train$WindSpeed9am > 5) &&(sample.data.train$WindSpeed3pm >5))
+  ,"Yes","No")
+sample.data.train$CloudTomorrow = ifelse(sample.data.train$CloudTomorrow == 1, "Yes", "No")
+sample.data.train<- sample.data.train%>% select( -WindSpeed3pm)
+
+sample.data.train<- sample.data.train%>% rename(Humidity =Humidity3pm , Cold=MinTemp , Windy=WindSpeed9am )
+
+```
+
+===========================
+```{r by-hand-model-training-yes-no}
+
+#if Humidity3pm > 50, it means that day is humid
+x <- c(14, 15,1, 5, 11,10,19)
+#since WindDir3pm and WindDirGust are not independent, I will drop one of them
+sample.data.train = WAUS.train[,x] 
+#if Humidity3pm > 50, it means that day is humid
+#if Humidity3pm > 50, it means that day is humid
+sample.data.train$HighPressure = ifelse(sample.data.train$Pressure3pm> 1013&
+                                sample.data.train$Pressure3pm>1013 ,
+                              "Yes","No")#if MinTemp < 10 degree c, it means that day is cold
+sample.data.train$Cold = ifelse(sample.data.train$MinTemp< 10 ,"Yes","No")
+#if Sunshine hour > 12 , it means that day is sunny
+sample.data.train$Sunshine = ifelse(sample.data.train$Sunshine > 12 ,"Yes","No")
+#if WindSpeed9am > 15 , it means that day is Windy
+sample.data.train$Windy = ifelse(
+  ((sample.data.train$WindSpeed9am > 15) &(sample.data.train$WindSpeed3pm >15))
+  ,"Yes","No")
+sample.data.train$CloudTomorrow = ifelse(sample.data.train$CloudTomorrow == 1, "Yes", "No")
+sample.data.train <- sample.data.train%>% select(-WindSpeed3pm,-WindSpeed9am, -Pressure9am,-Pressure3pm, - MinTemp)
+
+
+```
+
+```{r NB-probi-for-training}
+Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "Yes") )
+Not_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "No") )
+
+kableExtra::kable(sample.data.train %>% group_by(CloudTomorrow) %>% summarise(count=  n()))
+
+#probability of cloudy
+Cloudy.prob = Cloudy / (Cloudy + Not_Cloudy)
+#probability of not cloudy
+Not.Cloudy.prob = Not_Cloudy / (Cloudy + Not_Cloudy)
+# Looking at the Cloudy only, note P(Cloudy)
+# P(A1|N)	=	1/13;	
+HighPressure_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "Yes" & HighPressure == "Yes") )
+Not_HighPressure_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "Yes" & HighPressure == "No") )
+
+#P(A2|N)	=	10/13;
+Cold_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "Yes" & Cold == "Yes") )
+Not_Cold_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "Yes" & Cold == "No") )
+#P(A3|N)	=	3/13;	
+Sunshine_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "Yes" & Sunshine == "Yes") )
+Not_Sunshine_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "Yes" & Sunshine == "No") )
+
+#P(A4|N)	=	4/13
+Windy_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "Yes" & Windy == "Yes") )
+Not_Windy_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "Yes" & Windy == "No") )
+
+df.cloudy.prob = data.frame(
+   HighPressure_Cloudy, 
+                          Not_HighPressure_Cloudy,
+                          Cold_Cloudy,
+                        Not_Cold_Cloudy,
+                        Sunshine_Cloudy,
+                        Not_Sunshine_Cloudy,
+                        Windy_Cloudy,
+                        Not_Windy_Cloudy,
+   Cloudy.prob
+                        )
+# ===========================================================================
+# Looking at the Not Cloudy only, note P(Cloudy)
+HighPressure_Not_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "No" & HighPressure == "Yes") )
+Not_HighPressure_Not_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "No" & HighPressure == "No") )
+
+#P(A2|N)	=	10/13;
+Cold_Not_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "No" & Cold == "Yes") )
+Not_Cold_Not_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "No" & Cold == "No") )
+#P(A3|N)	=	3/13;	
+Sunshine_Not_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "No" & Sunshine == "Yes") )
+Not_Sunshine_Not_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "No" & Sunshine == "No") )
+
+#P(A4|N)	=	4/13
+Windy_Not_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "No" & Windy == "Yes") )
+Not_Windy_Not_Cloudy = nrow(sample.data.train %>% filter(CloudTomorrow == "No" & Windy == "No") )
+
+
+
+df.Notcloudy.prob = data.frame(
+   HighPressure_Not_Cloudy, 
+                          Not_HighPressure_Not_Cloudy,
+                          Cold_Not_Cloudy,
+                        Not_Cold_Not_Cloudy,
+                        Sunshine_Not_Cloudy,
+                        Not_Sunshine_Not_Cloudy,
+                        Windy_Not_Cloudy,
+                        Not_Windy_Not_Cloudy,
+   Not.Cloudy.prob
+                        )
+```
+
+```{r Cloudy-conditional-probi}
+HighPressure_Cloudy = HighPressure_Cloudy / Cloudy
+Not_HighPressure_Cloudy = Not_HighPressure_Cloudy / Cloudy
+
+Cold_Cloudy = Cold_Cloudy / Cloudy
+Not_Cold_Cloudy =Not_Cold_Cloudy/ Cloudy
+
+Sunshine_Cloudy = Sunshine_Cloudy / Cloudy
+Not_Sunshine_Cloudy = Not_Sunshine_Cloudy/ Cloudy
+
+Windy_Cloudy = Windy_Cloudy/ Cloudy
+Not_Windy_Cloudy = Not_Windy_Cloudy/ Cloudy
+
+df.cloudy.prob = data.frame(
+   HighPressure_Cloudy, 
+                          Not_HighPressure_Cloudy,
+                          Cold_Cloudy,
+                        Not_Cold_Cloudy,
+                        Sunshine_Cloudy,
+                        Not_Sunshine_Cloudy,
+                        Windy_Cloudy,
+                        Not_Windy_Cloudy,
+   Cloudy.prob
+                        )
+write.csv(df.cloudy.prob, file = "C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Assignment 2/Q9/2000Rows/CloudProb.csv")
+
+
+```
+```{r Not-Cloudy-conditional-probi}
+HighPressure_Not_Cloudy = HighPressure_Not_Cloudy / Not_Cloudy
+Not_HighPressure_Not_Cloudy = Not_HighPressure_Not_Cloudy / Not_Cloudy
+
+Cold_Not_Cloudy = Cold_Not_Cloudy / Not_Cloudy
+Not_Cold_Not_Cloudy =Not_Cold_Not_Cloudy/ Not_Cloudy
+
+Sunshine_Not_Cloudy = Sunshine_Not_Cloudy / Not_Cloudy
+Not_Sunshine_Not_Cloudy = Not_Sunshine_Not_Cloudy/ Not_Cloudy
+
+Windy_Not_Cloudy = Windy_Not_Cloudy/ Not_Cloudy
+Not_Windy_Not_Cloudy = Not_Windy_Not_Cloudy/ Not_Cloudy
+
+df.cloudy.prob = data.frame(
+   HighPressure_Not_Cloudy, 
+                          Not_HighPressure_Not_Cloudy,
+                          Cold_Not_Cloudy,
+                        Not_Cold_Not_Cloudy,
+                        Sunshine_Not_Cloudy,
+                        Not_Sunshine_Not_Cloudy,
+                        Windy_Not_Cloudy,
+                        Not_Windy_Not_Cloudy,
+   Not.Cloudy.prob
+                        )
+
+write.csv(df.cloudy.prob, file = "C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Assignment 2/Q9/2000Rows/NotCloudProb.csv")
+
+```
+
+```{r test-dataset}
+set.seed(31084222)
+#since WindDir3pm and WindDirGust are not independent, I will drop one of them
+sample.data.test = sample_n(WAUS.test[,x] , size = 10, replace = T)
+
+x <- c(14, 15,1, 5, 11,10,19)
+#since WindDir3pm and WindDirGust are not independent, I will drop one of them
+#if Humidity3pm > 50, it means that day is humid
+sample.data.test$HighPressure = ifelse(sample.data.test$Pressure3pm> 1013&
+                                sample.data.test$Pressure3pm>1013 ,
+                              "Yes","No")#if MinTemp < 10 degree c, it means that day is cold
+sample.data.test$Cold = ifelse(sample.data.test$MinTemp< 10 ,"Yes","No")
+#if Sunshine hour > 12 , it means that day is sunny
+sample.data.test$Sunshine = ifelse(sample.data.test$Sunshine > 12 ,"Yes","No")
+#if WindSpeed9am > 15 , it means that day is Windy
+sample.data.test$Windy = ifelse(
+  ((sample.data.test$WindSpeed9am > 15) &(sample.data.test$WindSpeed3pm >15))
+  ,"Yes","No")
+sample.data.test$CloudTomorrow = ifelse(sample.data.test$CloudTomorrow == 1, "Yes", "No")
+sample.data.test <- sample.data.test%>% select(-WindSpeed3pm,-WindSpeed9am, -Pressure9am,-Pressure3pm, - MinTemp)
+
+```
+
+
+```{r NB-probi-for-testing-Cloudy}
+
+sample.data.train.Cloudy = sample.data.test
+
+sample.data.train.Cloudy$HighPressure.prob  = ifelse(sample.data.train.Cloudy$HighPressure == "Yes",HighPressure_Cloudy, Not_HighPressure_Cloudy) 
+
+sample.data.train.Cloudy$Cold.prob  = ifelse(sample.data.train.Cloudy$Cold == "Yes",Cold_Cloudy, Not_Cold_Cloudy)  
+
+sample.data.train.Cloudy$Sunshine.prob  = ifelse(sample.data.train.Cloudy$Sunshine == "Yes",Sunshine_Cloudy, Not_Sunshine_Cloudy) 
+
+sample.data.train.Cloudy$Windy.prob = ifelse(sample.data.train.Cloudy$Windy == "Yes",Windy_Cloudy, Not_Windy_Cloudy) 
+
+sample.data.train.Cloudy$CloudyProb=sample.data.train.Cloudy[,6]*sample.data.train.Cloudy[,7]*sample.data.train.Cloudy[,8]*sample.data.train.Cloudy[,9]*Cloudy.prob
+
+```
+```{r byhand-confusionMatrix}
+
+predicted =c("No", "Yes", "No", "No", "Yes", "No", "No", "Yes", "No", "No")
+Actual =sample.data.test$CloudTomorrow
+cm_byHand = confusionMatrix(table(observed	=Actual	,	predicted	=	predicted))
+
+```
+
+```{r NB-probi-for-testing-Not-Cloudy}
+sample.data.train.NotCloudy = sample.data.test
+
+
+sample.data.train.NotCloudy$Humidit.proby  = ifelse(sample.data.train.NotCloudy$Humidity == "No",Humid_Not_Cloudy, Not_Humid_Not_Cloudy) 
+
+sample.data.train.NotCloOudy$Cold.prob  = ifelse(sample.data.train.NotCloudy$Cold == "No",Cold_Not_Cloudy, Not_Cold_Not_Cloudy)  
+
+sample.data.train.NotCloudy$Sunshine.prob  = ifelse(sample.data.train.NotCloudy$Sunshine == "No",Sunshine_Not_Cloudy, Not_Sunshine_Not_Cloudy) 
+
+sample.data.train.NotCloudy$Windy.prob = ifelse(sample.data.train.NotCloudy$Humidity == "No",Windy_Not_Cloudy, Not_Windy_Not_Cloudy)   
+
+
+sample.data.train.NotCloudy$NotCloudyProb=sample.data.train.NotCloudy[,6]*sample.data.train.NotCloudy[,7]*sample.data.train.NotCloudy[,8]*sample.data.train.NotCloudy[,9]*Cloudy.prob
+```
+
+
+
+
+=========================== useless
+```{r test-cloudy-only}
+sample.data.test.Cloud = sample.data.train%>% filter(CloudTomorrow == "Yes") 
+
+sample.data.test.Cloud$Humidity.prob  = ifelse(sample.data.test.Cloud$Humidity == "Yes",Humid_Cloudy, Not_Humid_Cloudy) 
+
+sample.data.test.Cloud$Cold.prob  = ifelse(sample.data.test.Cloud$Cold == "Yes",Cold_Cloudy, Not_Cold_Cloudy)  
+
+sample.data.test.Cloud$Sunshine.prob  = ifelse(sample.data.test.Cloud$Sunshine == "Yes",Sunshine_Cloudy, Not_Sunshine_Cloudy) 
+
+sample.data.test.Cloud$Windy.prob = ifelse(sample.data.test.Cloud$Windy == "Yes",Windy_Cloudy, Not_Windy_Cloudy)
+```
+
+```{r test-not-cloudy-only}
+sample.data.test.NotCloudy = sample.data.train%>% filter(CloudTomorrow == "No") 
+
+sample.data.test.Cloud$Humidity.prob  = ifelse(sample.data.test.Cloud$Humidity == "Yes",Humid_Cloudy, Not_Humid_Cloudy) 
+
+sample.data.test.Cloud$Cold.prob  = ifelse(sample.data.test.Cloud$Cold == "Yes",Cold_Cloudy, Not_Cold_Cloudy)  
+
+sample.data.test.Cloud$Sunshine.prob  = ifelse(sample.data.test.Cloud$Sunshine == "Yes",Sunshine_Cloudy, Not_Sunshine_Cloudy) 
+
+sample.data.test.Cloud$Windy.prob = ifelse(sample.data.test.Cloud$Windy == "Yes",Windy_Cloudy, Not_Windy_Cloudy)
+```
+```{r probi-Cloudy-Only}
+#since WindDir3pm and WindDirGust are not independent, I will drop one of them
+sample.data.test= WAUS.test[,x] 
+#if Humidity3pm > 50, it means that day is humid
+sample.data.test$Humidity3pm = ifelse(sample.data.test$Humidity3pm> 50 ,"Yes","No")
+#if MinTemp < 10 degree c, it means that day is cold
+sample.data.test$MinTemp = ifelse(sample.data.test$MinTemp< 10 ,"Yes","No")
+#if Sunshine hour > 12 , it means that day is sunny
+sample.data.test$Sunshine = ifelse(sample.data.test$Sunshine > 12 ,"Yes","No")
+#if WindSpeed9am > 15 , it means that day is Windy
+sample.data.test$WindSpeed9am = ifelse(
+  ((sample.data.test$WindSpeed9am > 5) &&(sample.data.test$WindSpeed3pm >5))
+  ,"Yes","No")
+sample.data.test$CloudTomorrow = ifelse(sample.data.test$CloudTomorrow == 1, "Yes", "No")
+sample.data.test<- sample.data.test%>% select( -WindSpeed3pm)
+
+sample.data.test<- sample.data.test%>% rename(Humidity =Humidity3pm , Cold=MinTemp , Windy=WindSpeed9am )
+
+sample.data.test.Cloudy = sample.data.test  %>% filter(CloudTomorrow == "Yes")
+
+sample.data.test.Cloudy =sample.data.test.Cloudy %>% cbind(sample.data.train.Cloudy)
+sample.data.test.Cloudy =sample.data.test.Cloudy[,-c(1:5)]
+
+
+```
+
+```{r probi-NotCloudy-Only}
+sample.data.test.NotCloudy = sample.data.test  %>% filter(CloudTomorrow == "No")
+sample.data.test.NotCloudy =sample.data.test.NotCloudy %>% cbind(sample.data.train.NotCloudy)
+sample.data.test.NotCloudy =sample.data.test.NotCloudy[,-c(1:5)]
+
+```
+```{r predict}
+sample.data.test = 
+ data.frame( NotCloudyProb =  sample.data.test.NotCloudy$NotCloudyProb, 
+             CloudyProb = sample.data.test.Cloudy$CloudyProb)
+  
+
+sample.data.test
+
+a <- sample.data.train %>% group_by(Sunshine) %>% summarise(Count = n())
+a <-a %>% cbind( sample.data.train %>% group_by(Windy ) %>% summarise(Count = n()))
+a <-a %>% cbind( sample.data.train %>% group_by(HighPressure)%>% summarise(Count = n()))
+a <-a %>% cbind( sample.data.train %>% group_by(Cold) %>% summarise(Count = n()))
+a <-a %>% cbind( sample.data.train %>% group_by(CloudTomorrow) %>% summarise(Count = n()))
+
+```
+
