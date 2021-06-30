@@ -1,0 +1,145 @@
+---
+title: "Harry Potter"
+author: "ETC1010-5510"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = F)
+```
+
+```{r}
+library(tidyverse)
+library(geomnet)
+```
+
+ensure you have installed 'geomnet':
+
+```{r}
+# install.packages("remotes")
+# library(remotes)
+# install_github("sctyner/geomnet")
+```
+
+
+## Harry Potter characters
+
+> There is a connection between two students if one provides emotional support to the other at some point in the book. 
+- Code to pull the data together is provided by Sam Tyner [here](https://github.com/sctyner/geomnet/blob/master/README.Rmd#harry-potter-peer-support-network).
+
+```{r read-hp1, echo=FALSE}
+hp_chars <- read_csv("data/hp_chars.csv")
+hp_edges <- read_csv("data/hp_edges.csv")
+```
+
+## We need to do a pretty gnarly full join, since we want this for each book:
+
+```{r read-hp, echo=FALSE}
+# for each book, expand the edges data and join it to characters
+hp_all <- ___ %>%
+  ___ %>%
+  group_map(~ full_join(.x, hp_chars, by = ___)) %>%
+  bind_rows(.id = "book") %>% 
+  rename(___)
+```
+
+> We now have it in that form that we wanted i.e., Harry potter data as nodes and edges
+
+```{r print-hp}
+hp_all
+```
+
+## Let's plot the characters for book 1
+
+```{r plot-hp, echo=TRUE}
+hp_all %>%
+  filter(book==1) %>%
+ggplot(aes(from_id = from_id, 
+           to_id = to_id)) + 
+  geom_net(aes(colour = house, group = house, shape = gender),
+           fiteach=T, 
+           directed = T, 
+           size = 3, 
+           linewidth = .5, 
+           ealpha = .5, 
+           labelon = T, 
+           fontsize = 3, 
+           labelcolour = "black", 
+           arrowsize = .5, 
+           singletons = FALSE) + 
+  scale_colour_manual(values = c("#941B08","#F1F31C", "#071A80", "#154C07")) + 
+  theme_net() + 
+  theme(panel.background = element_rect(colour = 'black'),
+        legend.position="bottom")
+```
+
+## Your Turn
+
+### Q1. Write out the 5x5 association matrix for Harry James Potter, Hermione Granger, George Weasley, Fred Weasley and Ronald Weasley in book 1.
+
+```{r}
+main <- c("Harry James Potter", "Hermione Granger", "George Weasley","Fred Weasley", "Ronald Weasley")
+hp_subset <- 
+```
+
+### Q2. In the philosphers stone, who has the most connections?
+> Put your data wrangling skills to use.
+> Hint: Transform to long form
+
+```{r}
+
+```
+
+### Q3. In the philosphers stone, who has the least connections?
+```{r}
+
+```
+
+### Q4. Across all the books, can you show the number of connections?
+```{r}
+# Transform to long format
+hp_long <- 
+  
+
+hp_count <- 
+  
+# Can you make a plot of the number of connections across the books?
+ggplot
+```
+
+### Q5. Plot the characters for all books
+```{r}
+
+hp_all %>%
+ggplot(aes(from_id = ___, 
+           to_id = ___)) + 
+  geom_net(aes(colour = ___, group = ___, shape = ___),
+           fiteach=T, 
+           directed = T, 
+           size = 3, 
+           linewidth = .5, 
+           ealpha = .5, 
+           labelon = T, 
+           fontsize = 3, 
+           labelcolour = "black", 
+           arrowsize = .5, 
+           singletons = FALSE) + 
+  scale_colour_manual(values = c("#941B08","#F1F31C", "#071A80", "#154C07")) + 
+  ___(~___, labeller = "label_both", ncol=3) + 
+  theme_net() + 
+  theme(panel.background = element_rect(colour = 'black'),
+        legend.position="bottom")
+```
+
+
+## Try exploring the other datasets in the `geomnet` package:
+
+```{r}
+library(geomnet)
+
+?geomnet::bikes
+?geomnet::blood
+?geomnet::email
+```
+
