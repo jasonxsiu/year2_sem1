@@ -1,0 +1,98 @@
+---
+title: "Week 4 - Workshop 2: Mapping flight movements"
+author: "YOUR NAME"
+output: html_document
+---
+
+```{r setup}
+library(tidyverse)
+```
+
+```{r load-plane}
+plane_N4YRAA <- read_csv("data/plane_N4YRAA.csv")
+glimpse(plane_N4YRAA)
+```
+
+Load Airline travel, airport location
+
+```{r read-airports}
+airport_raw <- read_csv("data/airports.csv")
+airport_raw %>%
+  select(AIRPORT, 
+         LATITUDE, 
+         LONGITUDE, 
+         AIRPORT_STATE_NAME) %>%
+  glimpse()
+
+```
+
+The Key is the airport three letter code, 
+    - this is used in the ORIGIN and DEST column of the `plane_N4YRAA` table
+    - and AIRPORT in the `airport` table
+
+
+First we will tidy up the `airport_raw` data and create `airport`
+
+```{r tidy-airport}
+
+unique(plane_N4YRAA$ORIGIN)
+
+
+airport <- airport_raw %>%
+  select(AIRPORT, 
+         LATITUDE, 
+         LONGITUDE, 
+         AIRPORT_IS_LATEST, 
+         DISPLAY_AIRPORT_NAME) %>%
+  filter(AIRPORT_IS_LATEST == 1) %>%  # get the rows where airport_is_latest equals 1
+  select(-AIRPORT_IS_LATEST)          # now hide that column because we don't need it anymore and want to clean up the dataset
+
+airport
+```
+`plane_N4YRAA`, has less airports than `airports`
+    - We will only keep the rows of the `airport` table, for those that appear in the `plane_N4YRAA` table by doing a left join
+
+```{r tidy-flight}
+N4YRAA_latlon <- left_join(plane_N4YRAA,
+                           airport,
+                           by = c("ORIGIN" = "AIRPORT")
+) %>%
+  rename(
+    "ORIGIN_LATITUDE" = "LATITUDE",
+    "ORIGIN_LONGITUDE" = "LONGITUDE"
+  )
+
+N4YRAA_latlon %>%
+  select(
+    ORIGIN,
+    ORIGIN_LATITUDE,
+    ORIGIN_LONGITUDE,
+    DISPLAY_AIRPORT_NAME
+  )
+```
+
+The variables ORIGIN_LATITUDE, ORIGIN_LONGITUDE, DISPLAY_AIRPORT_NAME are added to corresponding row in the plane_N4YRAA table.
+
+Add destination coordinates
+
+- Added spatial coordinates (lat, lon) for the origin airport
+- Same needs to be done for the destination airport
+
+Now we combine the current data with some new data to add the destinations.
+
+```{r}
+N4YRAA_latlon_dest <- left_join(
+  N4YRAA_latlon,
+  airport,
+  by = c("DEST" = "AIRPORT" )
+) %>%
+  rename(
+    "DEST_LATITUDE" = "LATITUDE",
+    "DEST_LONGITUDE" = "LONGITUDE"
+  )
+
+N4YRAA_latlon_dest <- N4YRAA_latlon_dest %>% arrange(FL_DATE, DEP_TIME)
+
+# Cleanup
+rm(airport)
+```

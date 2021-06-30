@@ -1,0 +1,146 @@
+---
+title: "Week 4 - Workshop 2: joins - solution"
+author: "YOUR NAME"
+date: "08/04/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+library(tidyverse)
+```
+
+```{r read-in}
+gap_life <- read_csv("data/gap_life.csv")
+gap_life_au <- read_csv("data/gap_life_au.csv")
+gap_income <- read_csv("data/gap_income.csv")
+gap_income_au <- read_csv("data/gap_income_au.csv")
+gap_co2 <- read_csv("data/gap_co2.csv")
+gap_co2_au <- read_csv("data/gap_co2_au.csv")
+
+
+
+```
+
+# Section A: Understanding joins
+
+We have information on Australian life expectancy and income:
+
+```{r data-view}
+gap_life_au
+gap_income_au
+```
+
+How do we plot life expectancy against income? We need them in the same dataframe
+
+One technique that we've looked at is `bind_cols()`, which binds dataframes together, column wise
+
+```{r bind-data}
+bind_cols(gap_life_au,
+          gap_income_au)
+```
+
+But this has problems:
+
+1. It produces messy output (country1, year1)
+2. It doesn't work if the data doesn't have the same number of rows
+
+For example, how do we add this co2 data to income or life?
+
+```{r data-view2}
+gap_co2_au
+```
+
+We can't use `bind_cols()`
+
+```{r data-bind2, eval=FALSE}
+bind_cols(gap_co2_au,
+          gap_income_au)
+```
+
+We could think about a more complex approach using `filter`, and so on...
+
+But surely this must be a problem that we encounter in data analysis?
+
+Someone must have thought of a solution to this before?
+
+They did! Joins!
+
+We can use ` left_join()` to combine the income and life expectancy data
+
+```{r}
+left_join(x = gap_income_au,
+          y = gap_life_au,
+          by = c("country", "year"))
+```
+
+And then what about adding co2 data?
+
+We can add on another join:
+
+```{r}
+left_join(x = gap_income_au,
+          y = gap_life_au,
+          by = c("country", "year")) %>% 
+  left_join(gap_co2_au,
+            by = c("country", "year"))
+```
+
+And we get some missing values for co2, because we don't have c02 values for 2015 and beyond.
+
+So now we can combine that together like so:
+
+```{r}
+gap_au <- left_join(x = gap_income_au,
+          y = gap_life_au,
+          by = c("country", "year")) %>% 
+  left_join(gap_co2_au,
+            by = c("country", "year"))
+
+gap_au
+```
+
+Now we can make a plot!
+
+```{r}
+ggplot(gap_au,
+       aes(x = gdp,
+           y = life_expectancy)) + 
+  geom_point()
+```
+
+# Section B
+
+## Q1
+
+Write down why these two joins produce different results:
+
+```{r}
+left_join(gap_co2_au,
+          gap_life_au)
+
+left_join(gap_life_au,
+          gap_co2_au)
+```
+
+**Answer:**
+
+In the first line of the code chunk above, we perform a left join between gap_co2_au and gap_life_au. A left join will use gap_co2_au as the master table to which the gap_life_au records are joined. So because gap_co_2 only has 3 rows - then this limits the number of rows that gap_life_au can be joined to - only the rows in gap_life_au from the years 2012, 2013 and 2014 will be able to be joined. 
+
+In the second line, gap_life_au is the master to which gap_co2_au will be joined. In this case, all rows from gap_life_au are used, and the three matches from gap_co2_au are joined to this for years 2012, 2013, 2014, and the rest of the unmatched fields become NA.
+
+## Q2
+
+What happens when we add data from New Zealand into the mix? Can you produce a dataset that has all data on gdp, life expectancy, and co2, for both Australia and New Zealand, using the joining techniques you've just learnt?
+
+```{r}
+gap <- left_join(x = gap_income,
+          y = gap_life,
+          by = c("country", "year")) %>% 
+  left_join(gap_co2,
+            by = c("country", "year"))
+```
+

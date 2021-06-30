@@ -1,0 +1,110 @@
+---
+title: "Extension-1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(lubridate)
+library(broom)
+library(ggResidpanel)
+```
+
+ ## Extension exercise 1: Predict co2 at another location
+
+Using your model, built using values collected the south pole sensor, see how well it fits values from Point Barrow, Alaska. 
+
+1. Download the data. You can use almost the same code as for SPO but check the file name at https://scrippsco2.ucsd.edu/data/atmospheric_co2/ptb. See here:
+
+https://scrippsco2.ucsd.edu/assets/data/atmospheric/stations/merged_in_situ_and_flask/daily/daily_merge_co2_ptb.csv
+
+```{r read-ptb}
+co2_ptb <- read_csv("data/daily_merge_co2_ptb.csv",
+                    col_names = c("date", 
+                                  "time", 
+                                  "day", 
+                                  "decdate", 
+                                  "n",
+                                  "flg", 
+                                  "co2"), 
+                    skip = 69) %>%
+  mutate(lat = 71.3, 
+         lon = 156.6, 
+         stn = "ptb") %>%
+  filter(flg == 0) %>%
+  mutate(date = ymd(date)) %>% 
+  mutate(day0 = day - min(day))
+```
+
+```{r gg-co2-ptb}
+ggplot(co2_ptb, 
+       aes(x = date, y = co2)) + 
+  geom_point()
+```
+
+## Model 1: `co2 ~ day0`
+```{r fit-co2_ptb}
+co2_ptb_fit <- lm(co2 ~ day0, data = co2_ptb)
+co2_ptb_fit
+co2_ptb_fit_tidy <- tidy(co2_ptb_fit)
+co2_ptb_fit_tidy
+```
+
+```{r augmented-model2-ptb}
+co2_ptb_model <- augment(co2_ptb_fit, co2_ptb)
+co2_ptb_model
+```
+
+```{r augmented-model-ptb}
+ggplot(co2_ptb_model, 
+       aes(x = date, 
+           y = co2)) + 
+  geom_point() + 
+  geom_line(aes(y = .fitted), colour = "blue")
+```
+
+```{r residuals-date}
+ggplot(co2_ptb_model,
+       aes(x = .fitted, y = .resid)) +
+  geom_point()
+```
+
+```{r}
+library(ggResidpanel)
+resid_panel(co2_ptb_fit, plots = "all")
+```
+
+## Add the quadratic term
+### Model 2: `co2 ~ day0 + day0sq`
+```{r daysq-mod }
+co2_ptb_sq <- co2_ptb %>%
+  mutate(day0sq = (day0-median(day0))^2)
+
+co2_ptb_fit2 <- lm(co2 ~ day0 + day0sq , data = co2_ptb_sq)
+
+tidy(co2_ptb_fit2)
+```
+
+## Plot the data, and overlay the fitted model. 
+```{r daysq-mod-plot}
+co2_ptb_model2 <- augment(co2_ptb_fit2, co2_ptb_sq)
+
+ggplot(co2_ptb_model2, 
+       aes(x = date, y = co2)) + 
+  geom_point() + 
+  geom_line(aes(y = .fitted), colour="blue")
+```
+
+### Plot the residuals
+```{r daysq-resid}
+ggplot(co2_ptb_model2, 
+       aes(x = .fitted, y = .resid)) + 
+  geom_point()
+```
+
+```{r}
+library(ggResidpanel)
+resid_panel(co2_ptb_fit2, plots = "all")
+```

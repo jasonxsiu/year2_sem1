@@ -1,0 +1,143 @@
+---
+title: "Week 5 - Introduction to Data Analysis"
+author: "ETC1010-5510"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# <span style="color:blue"> Exercise 3: Visualise Missing Values</span>
+
+#### **Estimated time: 20 min**
+
+```{r library}
+library(naniar)
+```
+
+## <span style="color:green"> Section A: Visualising all of missingness </span>
+
+It can be difficult to get a handle on where the missing values are in your data, and here is where visualisation can really help.
+
+The function `vis_miss()` creates an overview visualisation of the missingness in the data. It also has options to cluster rows based on missingness, using `cluster = TRUE`; as well as options for sorting the columns, from most missing to least missing (`sort_miss = TRUE`).
+
+### Instructions: Section A
+
+Using the `riskfactors` dataset from `naniar`:
+
+- Use `vis_miss()` to visualise the missingness in the data.
+- Use `vis_miss()` with `cluster = TRUE` to explore some clusters of missingness.
+- Use `vis_miss()` and sort the missings with `sort_miss` to arrange the columns by missingness.
+- Use the options `cluster = TRUE` and `sort_miss = TRUE` inside of `vis_miss` to cluster and sort missing values
+
+## Answer the following questions:
+
+### Q1A. Visualise all of the missingness in the `riskfactors`  dataset. Use `vis_miss`
+
+```{r q1a}
+___(riskfactors)
+```
+
+### Q2A. Visualise and cluster all of the missingness in the `riskfactors` dataset. Use option `cluster`
+
+```{r q2a}
+___(riskfactors, ___)
+```
+
+### Q3A. visualise and sort the columns by missingness in the `riskfactors` dataset. Use option `sort`
+
+```{r q3a}
+___(riskfactors, ___)
+```
+
+## <span style="color:green"> Section B: Visualising missing cases and variables </span>
+
+To get a clear picture of the missingness across variables and cases, use `gg_miss_var()` and `gg_miss_case()`. These are the visual counterpart to `miss_var_summary()` and `miss_case_summary()`.
+
+These can be split up into multiple plots with one for each category by choosing a variable to facet by.
+
+### Instructions: Section B
+Using the `riskfactors` dataset:
+
+- Visualise the number of missings in cases using `gg_miss_case()`.
+- Explore the number of missings in cases using `gg_miss_case()` and facet by the variable `education`.
+- Visualise the number of missings in variables using `gg_miss_var()`.
+- Explore the number of missings in variables using `gg_miss_var()` and facet by the variable `education`.
+
+What do you notice in the visualisations of the whole data compared to the faceting?
+
+## Answer the following questions:
+
+### Q1B. Visualise the number of missings in cases using `gg_miss_case()`
+Use `gg_miss_case(riskfactors)` to get started, and `gg_miss_case(riskfactors, facet = education)` to facet by education.
+
+```{r q1b}
+___(riskfactors)
+```
+
+### Q2B. Explore the number of missings in cases using `gg_miss_case()` and facet by the variable `education`.
+```{r q2b}
+___(riskfactors, facet = ___)
+```
+
+> Note: You might get a warning that says Factor `education` contains implicit NA, consider using `forcats::fct_explicit_na`
+> This is OK - it is to do with how NA values are recorded in the data, and is not an error.
+
+### Q3B. Visualise the number of missings in variables using `gg_miss_var()`
+```{r q3b}
+___(riskfactors)
+```
+
+### Q4B. Explore the number of missings in variables using `gg_miss_var()` and facet by the variable `education`.
+```{r q4b}
+___(riskfactors, facet = ___)
+```
+
+### Q5B. With the riskfactors dataset, explore how the missingness changes across the `marital` variable using gg_miss_fct()
+
+```{r q5b}
+___(x = ___, fct = ___)
+```
+
+## <span style="color:blue"> This is the End of Exercise 3</span>
+_______________________________________________________________________________
+_______________________________________________________________________________
+
+# Extra bits if interested
+
+Let's practice a few different ways to visualise patterns of missingness using:
+
+* `gg_miss_upset()` to give an overall pattern of missingness.
+* `gg_miss_fct()` for a dataset that has a factor of interest: marriage.
+* and `gg_miss_span()` to explore the missingness in a time series dataset.
+
+What do you notice with the missingness and the facetting in the data?
+
+- Explore missingness pattern of the `airquality` dataset with `gg_miss_upset()`.
+- Explore how the missingness changes in the `riskfactors` dataset across the `marital` variable using `gg_miss_fct()`.
+
+Using the `pedestrian` dataset:
+
+- Explore how the missingness of the `hourly_counts` changes over a span of 3000 (you can also try different spans from 2000-5000).
+- Explore the impact of `month` by facetting by `month`, and explore how missingness changes for a span of 1000.
+
+### Using the airquality dataset, explore the missingness pattern using `gg_miss_upset()`
+
+You will use the arguments `var = hourly_counts`, `span_every = 1000`, and `facet = month` inside of the `gg_miss_span()` function.
+
+```{r}
+gg_miss_upset(airquality)
+```
+
+### Using the pedestrian dataset, explore how the missingness of hourly_counts changes over a span of 3000 
+```{r}
+gg_miss_span(pedestrian, var = hourly_counts, span_every = 3000)
+```
+
+### Using the pedestrian dataset, explore the impact of month by facetting by month and explore how missingness changes for a span of 1000
+```{r}
+gg_miss_span(pedestrian, var = hourly_counts, span_every = 3000, facet = month)
+```

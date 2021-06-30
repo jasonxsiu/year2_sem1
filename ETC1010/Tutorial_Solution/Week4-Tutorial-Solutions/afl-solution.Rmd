@@ -1,0 +1,189 @@
+---
+title: "Week 4 - Workshop 2: Exploring Women's AFL - Solution"
+author: "YOUR NAME"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = T)
+```
+
+```{r setup-lib}
+library(tidyverse)
+```
+
+# Preparation
+
+We are looking at data for Women's AFL.
+
+There are two tables:
+
+- players.csv
+- teams.csv 
+
+The data was sourced from this website: https://github.com/ropenscilabs/ozwomensport/tree/master/AFLW/data
+
+Read them into R:
+
+```{r read-data}
+# to clean up the names of the data
+library(janitor)
+# clean_names is this nice function that makes nice variable names
+# so you don't have to refer to vars like `with spaces` --> with_spaces.
+players <- read_csv("data/players.csv") %>% clean_names() 
+teams <- read_csv("data/teams.csv") %>% clean_names()
+```
+
+Have a look at the data with `View()` or `glimpse()`.
+
+```{r glimpse}
+glimpse(teams)
+glimpse(players)
+```
+
+
+# Questions
+
+## Q1
+
+Using the teams dataset, make a barchart of the **total kicks** by **club**.  What do you learn?
+
+```{r barchart-total-kicks}
+ggplot(teams,
+       aes(x = club,
+           y = kicks_tot)) + 
+  geom_col()
+```
+
+## Q2
+
+Take that same barplot and reorder the club by `kicks_tot`, what changes?
+
+```{r barchart-total-kicks-flip}
+ggplot(teams,
+       aes(x = reorder(club, kicks_tot),
+           y = kicks_tot)) + 
+  geom_col()
+```
+
+```{r barchart-total-kicks-flip}
+ggplot(teams,
+       aes(x = reorder(club, kicks_tot),
+           y = kicks_tot)) + 
+  geom_col() + 
+  coord_flip()
+```
+
+## Q3
+
+To compare teams, should you use average or total numbers? Explain your thinking.
+
+**Answer:**
+> Average would be a better comparison, because not all teams may have played the same number of games.
+
+## Q4
+
+Make a scatterplot of average kicks by average handballs. Use an aspect ratio of 1. What do you learn?
+
+```{r gg-kicks-handballs}
+ggplot(teams,
+       aes(kicks_avg,
+           handballs_avg)) + 
+  geom_point() + 
+  theme(aspect.ratio = 1)
+```
+
+> Nothing can be said about the plot per se. Perhaps `plotly()` can provide more information on individual observation.
+
+##  Q5
+
+Use the `plotly` package to make the previous plot interactive (with the `ggplotly` function). Report the name of the team(s) that has(ve) the highest on both variables.
+
+```{r plotly}
+library(plotly)
+ggplot(teams,
+       aes(kicks_avg,
+           handballs_avg,
+           # this label option gets passed to ggplotly
+           label = club)) + 
+  geom_point() + 
+  theme(aspect.ratio = 1)
+
+# ggplotly uses some programming magic and uses the last ggplot object you made
+# to make it interactive.
+ggplotly()
+```
+
+> Collingwood has the highest kick_avg
+
+> Melbourne has highest handballs_avg
+
+## Q6
+
+Make a scatterplot of average frees for (frees_for_avg) by against (frees_agst_avg), for each season. Use an aspect ratio of 1. What do you learn? 
+
+```{r gg-avg-frees}
+ggplot(teams,
+       aes(x = frees_for_avg,
+           y = frees_agst_avg) ) + 
+  geom_point() +
+  theme(aspect.ratio = 1)
+```
+
+> Nothing can be said about the plot per se. Perhaps `plotly()` can provide more information on individual observation.
+
+## Q7
+
+Make the plot interactive and report the name of the team that has the most and the least free_against_avg and frees_for_avg.
+
+```{r gg-team-frees-for-against}
+# use the similar ggplotly code from before
+ggplot(teams,
+       aes(frees_for_avg,
+           frees_agst_avg,
+           text = club)) + 
+  geom_point() + 
+  theme(aspect.ratio = 1)
+
+ggplotly()
+```
+
+> frees against average: Collingwood has the most ; Brisbane has the least
+
+> frees for average: Adelaide Crows has the most ; Carlton has the least
+
+## Q8
+
+Using the players data, make a side-by-side boxplot of the average kicks by each club. What do you learn? 
+
+```{r gg-players-club-avg-kicks}
+ggplot(players, 
+       aes(club, 
+           kicks_avg)) + 
+  geom_boxplot()
+```
+
+
+## Q9
+
+Create a ggplotly() to find out which team had the player with the highest average kicks. Do some teams appear to have "star" players, and others have more even skills in this area?
+
+hint: This should show points for the avegare kicks for each player by club, where the ggplotly text shows the player name. 
+
+```{r}
+
+ggplot(players,
+       aes(club,
+           kicks_avg,
+           text = player)) + 
+  geom_point() + 
+  theme(aspect.ratio = 1)
+
+ggplotly()
+
+
+```
+
+>Erin Phillips is the star player of Adel
+
+>Emma Kearney is the star player of WB, close to Erin Phillips

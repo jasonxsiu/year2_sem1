@@ -1,0 +1,112 @@
+---
+title: "Week 5 - Introduction to Data Analysis"
+author: "ETC1010-5510"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# <span style="color:blue"> Exercise 2: Summarise and Tabulate Missing Values</span>
+
+#### **Estimated time: 20 min**
+
+```{r library}
+library(naniar)
+library(dplyr)
+```
+
+## <span style="color:green"> Section A: Summarizing missingness </span>
+
+### Instructions: Section A
+
+Now that you understand the behavior of missing values in R, and how to count them, let's scale up our summaries for cases (rows) and variables, using `miss_var_summary()` and `miss_case_summary()`, and also explore how they can be applied for groups in a dataframe, using the `group_by` function from `dplyr`.
+
+Calculate summaries of missingness in the `airquality` dataset for variables using the `miss_var_summary()` function.
+
+## Answer the following questions:
+
+### Q1A. Summarise missingness in _each variable_ of the `airquality` dataset. Pass `airquality` into the `miss_var_summary()` function.
+
+```{r q1-a}
+# Summarise missingness in each variable of the `airquality` dataset
+___(airquality)
+```
+
+### Q2A. Calculate summaries of missingness in the `airquality` dataset for the _cases_ using the `miss_case_summary()` function.
+
+```{r q2-a}
+# Summarise missingness in each case of the `airquality` dataset
+___(airquality)
+```
+
+
+
+### Q3A. Using the `airquality` dataset, use `group_by()` to create summaries for _each variable_, by each `Month`
+
+* Pass `Month` into the `group_by()` function.
+* Then use the `miss_var_summary()` and `miss_case_summary()` function.
+
+```{r q3-a}
+airquality %>%
+  ___ %>%
+  ___
+```
+
+### Q4A. Using the `airquality` dataset, use `group_by()` to create summaries for _each case_, by each `Month`. 
+
+```{r q4-a}
+airquality %>%
+  ___ %>%
+  ___
+```
+
+## <span style="color:green"> Section B: Tabulate Missingness </span>
+
+The summaries of missingness we just calculated give us the number and percentage of missing observations for the cases and variables. 
+
+Another way to summarise missingness is by tabulating the number of times that there are 0, 1, 2, 3, missings in a variable, or in a case. 
+
+In this exercise we are going to tabulate the number of missings in each case and variable using `miss_var_table()` and `miss_case_table()`, and also combine these summaries with the the `group_by` operator from `dplyr`. to explore the summaries over a grouping variable in the dataset.
+
+### Instructions: Section B
+For the `airquality` dataset:
+
+- Tabulate missingness for each variable using `miss_var_table()`.
+- Tabulate missingness for every case using `miss_case_table()`.
+- Combine previous tabulations with `dplyr`'s `group_by()` function to create tabulations for each variable and case, by each `Month`.
+
+## Answer the following questions:
+
+Don't forget to use `miss_case_table(airquality)`.
+
+Also, don't forget to group by `Month`, using `group_by(Month)` like this: `airquality %>% group_by(Month) %>% miss_case_table()`.
+
+### Q1B. Tabulate missingness in each _variable_ and _case_ of the `airquality` dataset
+
+```{r q1-b}
+
+# variables
+___(airquality)
+
+# cases
+___(airquality)
+```
+
+### Q2B. Tabulate the missingness in each _variable_, grouped by Month, in the `airquality` dataset
+```{r q2-b}
+airquality %>%
+  ___ %>%
+ ___
+```
+
+### Q3B. Tabulate the missingness in each _case_, grouped by Month, in the `airquality` dataset
+```{r q3-b}
+
+airquality %>%
+  ___ %>%
+  ___
+```
