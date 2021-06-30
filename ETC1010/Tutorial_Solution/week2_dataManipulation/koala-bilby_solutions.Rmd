@@ -1,0 +1,70 @@
+---
+title: "Koala Bilby Exercise"
+author: "YOUR NAME"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(echo = T, eval = T)
+```
+
+
+# Demonstrate with koala bilby data 
+
+Here is a little data set to practice `pivot_longer`, `pivot_wider` and `separate` on.
+
+1. First we load the library `tidyverse` to load up all of our functions.
+
+```{r library}
+library(tidyverse)
+```
+
+2. Read the data in and explore the variables
+
+```{r koala-bilby}
+kb <- read_csv("data/koala_bilby.csv")
+kb
+```
+
+
+3.Pivot the data into long form, naming the two new variables, `label` and `count`
+
+```{r kb-long}
+kb_long <- kb %>% 
+  pivot_longer(cols = -ID,
+               names_to = "label", 
+               values_to = "count")
+
+kb_long
+
+pivot_longer(
+    kb, cols=c(-ID), 
+    names_to=c("animal","region"), names_sep="_", values_to="count") 
+```
+
+4.Separate the labels into two new variables, `animal`, `state`
+
+```{r kb-separate}
+kb_long_sep <- kb_long %>%
+  separate(col = label, 
+           into = c("animal", "state"))
+
+kb_long_sep
+```
+
+5.Pivot the long form data into wide form, where the columns are `state`s. 
+
+```{r kb-wide-state}
+kb_long_sep %>% 
+  pivot_wider(names_from = state,
+              values_from = count)
+```
+
+6.Convert the long form data into wide form, where the columns are the `animal`s. 
+
+```{r kb-pivot-wider-animal}
+kb_long_sep %>% 
+  pivot_wider(names_from = "animal",
+              values_from = "count")
+```

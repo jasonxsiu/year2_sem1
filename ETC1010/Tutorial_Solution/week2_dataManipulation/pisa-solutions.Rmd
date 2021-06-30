@@ -1,0 +1,333 @@
+---
+title: "Exploring dPisa Data"
+author: "YOUR NAME"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(echo = T, eval = T)
+```
+
+# Exercise 2  
+
+## The PISA study (Programme for International Student Assessment)
+
+For help interpreting the data, please see the data dictionary: "Codebook_CMB.xlsx" in the `data` folder. 
+
+1. Read and execute these preparation steps
+
+```{r load-read}
+library(tidyverse)
+pisa_au_raw <- read_rds("data/pisa_au.rds")
+```
+
+```{r print-pisa}
+head(pisa_au_raw)
+```
+
+The data are messy! We have done a lot of pre-processing on the data for you, as the data cleaning requires for this contains some code that you haven't seen before, and it is a pretty intense amount of data cleaning. 
+
+You can see the code we have used here:
+
+```{r clean-pisa}
+pisa_au_tidy <- pisa_au_raw %>%
+  mutate(state = str_sub(string = STRATUM, 
+                         start = 4, 
+                         end = 5),
+         schtype_yr = str_sub(string = STRATUM, 
+                              start = 6,
+                              end = 7)) %>%
+  mutate(state = recode(state,
+                        "01" = "ACT", 
+                        "02" = "NSW", 
+                        "03" = "VIC",
+                        "04" = "QLD", 
+                        "05" = "SA", 
+                        "06" = "WA", 
+                        "07" = "TAS", 
+                        "08" = "NT")) %>%
+  mutate(schtype_yr = recode(schtype_yr,
+                             "01" = "Catholic_Y10",
+      "02" = "Catholic_noY10",
+      "03" = "Gov_Y10",
+      "04" = "Gov_noY10",
+      "05" = "Ind_Y10",
+      "06" = "Ind_noY10",
+      "07" = "Catholic_Y10",
+      "08" = "Catholic_noY10",
+      "09" = "Gov_Y10",
+      "10" = "Gov_noY10",
+      "11" = "Ind_Y10",
+      "12" = "Ind_noY10",
+      "13" = "Catholic_Y10",
+      "14" = "Catholic_noY10",
+      "15" = "Gov_Y10",
+      "16" = "Gov_noY10",
+      "17" = "Ind_Y10",
+      "18" = "Ind_noY10",
+      "19" = "Catholic_Y10",
+      "20" = "Catholic_noY10",
+      "21" = "Gov_Y10",
+      "22" = "Gov_noY10",
+      "23" = "Ind_Y10",
+      "24" = "Ind_noY10",
+      "25" = "Catholic_Y10",
+      "26" = "Catholic_noY10",
+      "27" = "Gov_Y10",
+      "28" = "Gov_noY10",
+      "29" = "Ind_Y10",
+      "30" = "Ind_noY10",
+      "31" = "Catholic_Y10",
+      "32" = "Catholic_noY10",
+      "33" = "Gov_Y10",
+      "34" = "Gov_noY10",
+      "35" = "Ind_Y10",
+      "36" = "Ind_noY10",
+      "37" = "Catholic_Y10",
+      "38" = "Catholic_noY10",
+      "39" = "Gov_Y10",
+      "40" = "Gov_noY10",
+      "41" = "Ind_Y10",
+      "42" = "Ind_noY10",
+      "43" = "Catholic_Y10",
+      "44" = "Catholic_noY10",
+      "45" = "Gov_Y10",
+      "46" = "Gov_noY10",
+      "47" = "Ind_Y10",
+      "48" = "Ind_noY10")) %>% 
+  separate(col = schtype_yr, 
+           into = c("schtype", "yr")) %>%
+  rename(
+    birthmonth = ST003D02T,
+    birthyr = ST003D03T,
+    gender = ST004D01T,
+    desk = ST011Q01TA,
+    room = ST011Q02TA,
+    computer = ST011Q04TA,
+    internet = ST011Q06TA,
+    solarpanels = ST011D17TA,
+    tvs = ST012Q01TA,
+    cars = ST012Q02TA,
+    music_instr = ST012Q09NA,
+    books = ST013Q01TA,
+    birthcnt = ST019AQ01T,
+    mother_birthcnt = ST019BQ01T,
+    father_birthcnt = ST019CQ01T,
+    test_anxiety = ST118Q01NA,
+    ambitious = ST119Q04NA,
+    prefer_team = ST082Q01NA,
+    make_friends_easy = ST034Q02TA,
+    tardy = ST062Q03TA,
+    science_fun = ST094Q01NA,
+    breakfast = ST076Q01NA,
+    work_pay = ST078Q10NA,
+    sport = ST078Q11NA,
+    internet_use = IC006Q01TA,
+    install_software = IC015Q02NA,
+    outhours_study = OUTHOURS,
+    math_time = MMINS,
+    read_time = LMINS,
+    science_time = SMINS,
+    belong = BELONG,
+    anxtest = ANXTEST,
+    motivat = MOTIVAT,
+    language = LANGN,
+    home_edres = HEDRES,
+    home_poss = HOMEPOS,
+    wealth = WEALTH,
+    stuweight = W_FSTUWT
+  ) %>% 
+  mutate(
+    math = (PV1MATH + PV2MATH + PV3MATH + PV4MATH + PV5MATH +
+            PV6MATH + PV7MATH + PV8MATH + PV9MATH + PV10MATH) / 10,
+    science = (PV1SCIE + PV2SCIE + PV3SCIE + PV4SCIE + PV5SCIE +
+               PV6SCIE + PV7SCIE + PV8SCIE + PV9SCIE + PV10SCIE) / 10,
+    read = (PV1READ + PV2READ + PV3READ + PV4READ + PV5READ +
+            PV6READ + PV7READ + PV8READ + PV9READ + PV10READ) / 10
+  ) %>% 
+  select(
+    state,
+    schtype,
+    yr,
+    birthmonth,
+    birthyr,
+    gender,
+    desk,
+    room,
+    computer,
+    internet,
+    solarpanels,
+    tvs,
+    cars,
+    music_instr,
+    books,
+    birthcnt,
+    mother_birthcnt,
+    father_birthcnt,
+    test_anxiety,
+    ambitious,
+    prefer_team,
+    make_friends_easy,
+    tardy,
+    science_fun,
+    breakfast,
+    work_pay,
+    sport,
+    internet_use,
+    install_software,
+    outhours_study,
+    math_time,
+    read_time,
+    science_time,
+    belong,
+    anxtest,
+    motivat,
+    language,
+    home_edres,
+    home_poss,
+    wealth,
+    stuweight,
+    math,
+    science,
+    read
+  ) %>%
+  mutate(gender = factor(gender,
+                         levels = 1:2,
+                         labels = c("female", "male")),
+         birthmonth = factor(birthmonth,
+                             levels = 1:12,
+                             labels = c("jan",
+                                        "feb",
+                                        "mar",
+                                        "apr",
+                                        "may",
+                                        "jun",
+                                        "jul",
+                                        "aug",
+                                        "sep",
+                                        "oct",
+                                        "nov",
+                                        "dec")))
+```
+
+Let's look at `pisa_au_tidy`:
+
+```{r pisa-top}
+head(pisa_au_tidy)
+```
+
+END of preparation steps 
+
+
+
+2. Explain how the STRATUM variable is processed to create three new variables: `state`, `schtype` and `yr` by:
+
+    a. Taking a sample of the stratum in the object `strat_slice` to see what the data originally look like
+
+```{r strat-slice}
+strat_slice <- head(pisa_au_raw$STRATUM, n = 5)
+
+strat_slice
+```
+
+    b. Now compare what the results of `strat_slice` are compare to using `str_sub` below
+
+```{r strat-slice-sub}
+str_sub(strat_slice, 
+        start = 4, 
+        end = 5)
+```
+
+    c. Write what you think `str_sub` does, and what the `start` and `end` arguments represent
+
+`str_sub` extracts and replaces substrings from a character vector, start and end are two integer vectors, start gives the position of the first character (defaults to first), end gives the position of the last (defaults to last character). [str_sub help page](https://www.rdocumentation.org/packages/stringr/versions/1.4.0/topics/str_sub)
+
+
+    d. Write how the STRATUM variable is processed to create the three new variables: `state`, `schtype` and `yr`?" 
+
+The state is created by taking the state code from positions 4 and 5 of the stratum variable. Then the school type year variable is created by taking the code from STRATUM position 6 and 7. State is recoded according to the list in lines 35-42. School type you’re is recoded from a two digit code no a string separated with ‘_’ based on the list in lines 44- 91. The school type and year are separated into two separate columns.
+
+3. Explain what the `rename` operation is doing (around line 100)
+
+It converts the old variable names (that are hard to understand) into variable names with meaning.
+
+4. Perform summaries
+
+    a. Compute the average of math scores by state. 
+
+```{r pisa-summary}
+pisa_au_tidy %>%
+  group_by(state) %>%
+  summarise(mean_wt = weighted.mean(x = math, 
+                                           w = stuweight))
+
+```
+
+A note on the `weighted.mean` function. This computes a _weighted average_. 
+
+A weighted average is where you control the individual contribution of each value when averaging. This means that if some demographics are not matching across samples, they can help control for this by controlling the _weight_ of that sample when calculating the mean. So, for our example with survey data, the weights indicate how representative an individual is of the population. You can think of taking the normal average as a special case of a weighted average where each weight is 1, and equally contributes.
+
+    b. Which state does best, on average, on math? 
+    
+ACT (refer to table output in 4a above)   
+
+5. Compute the difference in average male and female math scores by state by: 
+
+    a. Calculating the mean for math by state and gender
+
+```{r pisa-summarise}
+pisa_state_gender_math <- pisa_au_tidy %>%
+   group_by(state, 
+       gender) %>%
+   summarise(weighted_mean = weighted.mean(x = math, 
+                                           w = stuweight))
+
+pisa_state_gender_math
+```
+
+    b. Pivoting one of the columns using `pivot_wider` 
+
+```{r pisa-spread}
+pisa_math_wide <- pisa_state_gender_math %>%
+   pivot_wider(names_from = gender,
+          values_from = weighted_mean)
+
+pisa_math_wide
+```
+
+    c. Now calcluate the difference between male and female scores and arrange
+
+```{r male-female-diff}
+pisa_math_wide %>%
+ mutate(math_diff = abs(male - female)) %>%
+  arrange(math_diff)
+```
+
+    d. Which state has the smallest average gender difference?
+    
+Queensland    
+
+5. Does test anxiety have an effect on math score? (Use the variable `anxtest`, and a simple regression model to answer this question.)
+
+```{r pisa-lm}
+pisa_lm <- lm(math ~ anxtest,
+              data = pisa_au_tidy)
+library(broom)
+tidy(pisa_lm)
+
+ggplot(pisa_au_tidy, aes(y=math,x=anxtest)) + geom_point() + geom_smooth(method="lm")
+h
+```
+
+Yes, greater test anxiety is associated with a reduction in math scores
+
+
+# Sources
+
+-The data was originally downloaded from [http://www.oecd.org/pisa/data/2015database/](http://www.oecd.org/pisa/data/2015database/) 
+
+-Data dictionary
+found from the [OECD PISA site](https://www.oecd.org/pisa/data/2015database/))
+
+-Explanatory video [PISA study video](https://www.youtube.com/watch?v=i4RGqzaNEtg)

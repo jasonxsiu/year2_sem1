@@ -1,0 +1,186 @@
+---
+title: "Exploring French Fries"
+author: "YOUR NAME"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(echo = T, eval = T)
+```
+
+# Exercise 3
+
+1. Open french-fries.rmd and load the tidyverse package by replacing the '___' with the correct package
+
+```{r setup}
+#install.packages(c("tidyverse", "here"))
+library(tidyverse)
+```
+
+2. Read in the french fries csv data file, is `french_fries` in long or wide format, how can you tell? 
+
+```{r read-fries}
+french_fries <- read_csv("data/french_fries.csv")
+french_fries
+```
+
+
+3. The next code chunk converts the data to long form. What do you notice about each observation?
+
+```{r long-fries}
+fries_long <- french_fries %>% 
+  pivot_longer(cols = potato:painty,
+               names_to = "type", 
+               values_to = "rating") %>%
+  mutate(type = as.factor(type))
+```
+
+4. Filter french fries data using `filter()` to have:
+
+
+    (a) only week 1
+
+```{r fries-long-filter}
+fries_long %>% filter(time == 1)
+```
+
+
+    (b) weeks 1-4 only
+
+```{r fries-long-filter-1-4}
+fries_long %>% filter(time %in% c("1", "2", "3", "4"))
+```
+
+
+    (c) oil type 1 (oil type is called treatment)
+
+```{r fries-long-filter-oil}
+fries_long %>% filter(treatment == 1)
+```
+
+
+    (d) oil types 1 and 3 but not 2
+
+```{r fries-long-filter-oitl-2}
+fries_long %>% filter(treatment != 2)
+```
+
+
+5. Show the following variables using `select()`:
+
+    (a) choose time, treatment and rep
+
+```{r fries-long-select}
+fries_long %>% select(time, treatment, rep)
+```
+
+
+    (b) choose subject through to rating
+
+```{r fries-long-select-colon}
+fries_long %>% select(subject:rating)
+```
+
+    (c) show everything except subject (drop subject)
+
+```{r fries-long-drop}
+fries_long %>% select(-subject)
+```
+
+
+6. For the french fries data compute a new variable called lrating by taking a log of the rating using `mutate`  
+
+```{r fries-long-mutate}
+fries_long %>%
+  mutate(lrating = log10(rating))
+```
+
+
+7. Use `group_by()` and `summarise()` to do the following:  
+
+    (a) Compute the average rating by subject  
+
+```{r fries-long-group-by}
+fries_long %>% 
+  group_by(subject) %>%
+  summarise(rating = mean(rating, na.rm=TRUE))
+```
+
+
+    (b) Compute the average rancid rating per week 
+
+```{r fries-long-filter-group-by}
+fries_long %>% 
+  filter(type == "rancid") %>%
+  group_by(time) %>%
+  summarise(rating = mean(rating, na.rm=TRUE))
+```
+
+8. Use `count()` to count the following:
+
+    (a) the number of subjects
+
+```{r fries-count-subject}
+fries_long %>% count(subject, sort=TRUE) 
+
+```
+
+    (b) the number of types
+
+```{r fries-count-type}
+fries_long %>% count(type) 
+```
+
+# Exercise 4: Data analysis
+
+1. Are the `rating`s for each `type` similar?
+
+```{r fries-similar-ratings}
+fries_long %>% 
+  group_by(type) %>%
+  summarise(m = mean(rating, 
+                     na.rm = TRUE), 
+            sd = sd(rating, 
+                    na.rm = TRUE)) %>%
+  arrange(-m)
+
+ggplot(fries_long,
+       aes(x = type, 
+           y = rating)) +
+  geom_boxplot()
+
+```
+
+*Note: the plot prints but you see a warning, this is because there are 9 rows that are missing a rating*
+
+
+**Answer: The scales of the ratings are quite different. Mostly the chips are rated highly on potato'y, but low on grassy.** 
+
+
+2. Are the replicates (`reps`) like each other?
+
+    (a) Pivot the fries_long dataset wide to show the `rating` for `rep` 1 and `rep` 2 in their own column
+
+```{r fries-spread}
+fries_spread <- fries_long %>% 
+  pivot_wider(names_from = rep, 
+              values_from = rating)
+  
+fries_spread
+
+```
+
+
+    (b) Plot the ratings for rep 1 and 2 and add a title to the plot with a short summary of the data quality 
+    
+
+```{r fries-spread-plot, out.width= "80%"}
+  ggplot(fries_spread,
+         aes(x = `1`, 
+             y = `2`)) + 
+  geom_point() + 
+  labs(title = "Data is poor quality: the replicates do not look like each other!")
+
+```
+

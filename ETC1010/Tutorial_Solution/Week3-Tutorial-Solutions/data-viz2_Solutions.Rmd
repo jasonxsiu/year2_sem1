@@ -1,0 +1,272 @@
+---
+title: "Week 3 - Introduction to Data Analysis"
+author: "ETC1010-5510"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE)
+```
+
+## <span style="color:blue"> Exercise 2: Exploring Pedestrian Counts </span>
+
+>  Open data-viz2.Rmd
+
+> In here, we'll explore trends in pedestrian counts for Melbourne Central station.
+To solve this exercise, fill in the blanks and then knit the final document.
+
+### Load packages and get data
+```{r package, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(rwalkr)
+library(lubridate)
+```
+
+### Filter out sensor data for Melbourne Central and store in a variable called `walk`
+
+```{r rwalkr-load}
+walk_all <- melb_walk_fast(year = 2019)
+
+walk <- walk_all %>% filter(Sensor == "Melbourne Central")
+
+# write_csv(walk, path = "exercises/3b/data/walk_2019.csv")
+# write_csv(walk, path = "data/walk_2019.csv")
+```
+
+### Read the data from "data" folder and convert to "tidy" format
+
+```{r read-walk}
+walk <- read_csv("data/walk_2019.csv")
+walk
+```
+
+### Conversion to Tidy data: Add new variables to data: `month` and `wday`
+```{r month-week}
+walk_tidy <- walk %>%
+  mutate(month = month(Date,  label = TRUE, abbr = TRUE), 
+         wday = wday(Date, label = TRUE, abbr = TRUE, week_start = 1))
+walk_tidy
+```
+
+## Answer the following questions:
+
+### Q1. Generate a plot for _monthly_ pedestrian counts. Use `month` and `Count`.
+
+```{r month, eval = T}
+ggplot(walk_tidy,
+       aes(x = month, 
+           y = Count)) + 
+  geom_col()
+```
+
+### Q2. Similarly, generate a plot for _weekly_ pedestrian counts.
+
+```{r week, eval = T}
+ggplot(walk_tidy,
+       aes(x = wday, 
+           y = Count)) + 
+  geom_col()
+```
+
+### Q3. Create above graphs (_monthly, weekly and daily_ counts) for Birrarung Marr.
+
+> First, let's pull the 2019 data for the sensor Birrarung Marr. Transform data into tidy form.
+
+> Hint: Look at the similar code for Melbourne Central above.
+
+```{r walk-burra}
+# filter data for Birrarung Marr
+walk_birra <- walk_all %>% filter(Sensor == "Birrarung Marr")
+
+# transform to tidy data; create new columns: `month` and `wday`
+walk_birra_tidy <- walk_birra %>%
+  mutate(month = month(Date,  label = TRUE, abbr = TRUE), 
+         wday = wday(Date, label = TRUE, abbr = TRUE, week_start = 1))
+walk_birra_tidy
+```
+> Next, create plots:
+
+```{r plots-birra}
+
+# Monthly counts:
+ggplot(walk_birra_tidy,
+       aes(x = month, 
+           y = Count)) + 
+  geom_col()
+
+# Weekly counts:
+ggplot(walk_birra_tidy,
+       aes(x = wday, 
+           y = Count)) + 
+  geom_col()
+```
+
+> Bar plots do not provide sufficient insights:
+>
+>* There might be a different number of days of the week over the year.
+>* This means that simply summing the counts might lead to a misinterpretation of pedestrian patterns.
+>* Similarly, months have different numbers of days.
+
+### Q4. Generate a line-plot for _daily_ pedestrian counts. Here, we'll use `geom_line()` and `group` aesthetic to group the lines.
+
+> Hint: Use `Time` and `Count` as aesthetics.
+
+```{r daily, out.width=c('50%', '50%'), fig.show='hold', eval = T}
+# Daily counts- Melbourne central
+ggplot(walk_tidy,
+       aes(x = Time, 
+           y = Count,
+           group = Date)) + 
+  geom_line() +
+  ggtitle("Daily counts: Melbourne Central")
+
+ggplot(walk_birra_tidy,
+       aes(x = Time, 
+           y = Count,
+           group = Date)) + 
+  geom_line() +
+  ggtitle("Daily counts: Birrarung Marr")
+```
+
+>Line charts reveal interesting patterns from daily pedestrian counts.
+
+### **Is there the same _daily_ pattern as observed at Melbourne Central? If not, how does it differ?**
+> It is hard to tell because of different y-scales. The y-scales need to be the same to make a valid comparison.
+
+### Q5. What are the number of pedestrians per day?
+> Hint: Refer to Workshop slides
+
+```{r count-day}
+walk_day <- walk_tidy %>% 
+  group_by(Date) %>%
+  summarise(day_count = sum(Count, na.rm = TRUE))
+walk_day
+```
+
+### Q6. What are the average number of pedestrians per weekday?
+> Hint: Refer to Workshop slides
+
+```{r count-weeekday}
+walk_day %>%
+  mutate(wday = wday(Date, label = TRUE, abbr = TRUE, week_start = 1)) %>% 
+  group_by(wday) %>%
+  summarise(m = mean(day_count, na.rm = TRUE),
+            s = sd(day_count, na.rm = TRUE))
+```
+
+## <span style="color:blue"> Exercise 3: More Data Visualisation using Calendar plots</span>
+
+> We'll continue in this same .Rmd
+
+> Let's combine the Birrarung Marr data with Melbourne central data (walk) using `bind_rows()`. Or even subset the original data that has all the obsercations into something that has melbourne central AND birrarung marr. There are many ways to get to the same answer.
+
+> Let's bind the two Sensors- Melbourne central and Birrarung Marr together
+
+```{r bind-both}
+walk_both <- bind_rows(walk_tidy,
+                       walk_birra_tidy)
+```
+
+## Answer the following questions:
+
+### Q1. Is there the same _daily_ pattern as observed at Melbourne Central? If not, how does it differ? Can you provide reason for the different daily pattern?
+
+```{r walk-both}
+ggplot(walk_both,
+        aes(x = Time, 
+            y = Count,
+           colour = Sensor,
+           group= Date)) + 
+     geom_line() +
+  facet_wrap(~Sensor)
+
+```
+
+> No. While pedestrian counts at Melbourne Central follow a strict pattern, Birrarung Marr has a lot of variation. 
+
+> This could be because of the varied nature of activities at the two Sensor locations. Melbourne Central hosts activities such as office commutes, student's commute, shopping, restaurants etc.
+
+> Birrarung Marr Park on the other hand hosts events and festivals such as Moomba fest! The park also provides walking, cycle access and other recreational activities.
+
+### Q2. Can you detect special events, like the Moomba Festival, based on pedestrian counts?
+> We can do this using Calendar plots. Use your Google skills to find out Moomba Fest 2019 dates and observe pedestrian trends.
+
+```{r cal}
+library(sugrrants)
+walk_tidy_calendar <- 
+  frame_calendar(walk_tidy,
+                 x = Time, 
+                 y = Count, 
+                 date = Date, 
+                 nrow = 4)
+p1 <- ggplot(walk_tidy_calendar,
+       aes(x = .Time, 
+           y = .Count, 
+           group = Date)) +
+  geom_line()
+prettify(p1)
+```
+
+> Also, look at the pedestrian counts on 31st Dec. What do you observe?
+
+### Q3. How do the calendar plots compare for Melbourne Central and Birrarung Marr?
+```{r cal-both}
+walk_both_tidy_calendar <- 
+  frame_calendar(walk_both,
+                 x = Time, 
+                 y = Count, 
+                 date = Date, 
+                 nrow = 4)
+
+p2 <- ggplot(walk_both_tidy_calendar,
+       aes(x = .Time, 
+           y = .Count,
+           colour= Sensor,
+           group = Date)) +
+  geom_line() +
+  facet_wrap(~Sensor)
+prettify(p2)
+```
+
+### Q4. Join holidays data with pedestrian counts and observe trends. Can you match these with known events, found from web searching?
+
+```{r holidays}
+library(tsibble)
+library(sugrrants)
+library(timeDate)
+vic_holidays <- holiday_aus(2019, state = "VIC")
+vic_holidays
+
+walk_holiday <- walk_tidy %>%
+  mutate(holiday = if_else(condition = Date %in% vic_holidays$date, 
+                          true = "yes", 
+                          false = "no")) %>%
+  mutate(holiday = if_else(condition = wday %in% c("Sat", "Sun"), 
+                          true = "yes", 
+                          false = holiday)) 
+walk_holiday
+
+walk_holiday_calendar <- frame_calendar(data = walk_holiday,
+                                        x = Time, 
+                                        y = Count, 
+                                        date = Date, 
+                                        nrow = 6)
+
+p3 <- ggplot(walk_holiday_calendar,
+       aes(x = .Time, 
+           y = .Count, 
+           group = Date, 
+           colour = holiday)) +
+  geom_line() + 
+  scale_colour_brewer(palette = "Dark2")
+prettify(p3)
+```
+
+> Now, go to `knitr::opts_chunk` at line 9, change `eval = TRUE`, then knit the document.
+
+### What to do if you are stuck?
+
+* Read through the lecture slides again, they most likely have an answer to these questions!
+* Take the question and copy-paste it into google, adding "lubridate" to the google query.
+
