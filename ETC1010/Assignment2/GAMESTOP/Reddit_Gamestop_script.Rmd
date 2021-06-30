@@ -1,0 +1,117 @@
+```{r}
+library(tidyverse)
+library(RedditExtractoR)
+```
+
+
+
+22/1/2021
+```{r}
+content <- reddit_content("https://www.reddit.com/r/wallstreetbets/comments/l2x7he/gme_yolo_update_jan_22_2021/" ,wait_time = 2)
+Table = tibble(content)
+```
+Is it too late to buy gamestop?
+https://www.reddit.com/r/stocks/comments/l2c28d/is_it_too_late_to_buy_gamestop/
+```{r}
+content <- reddit_content("https://www.reddit.com/r/wallstreetbets/comments/l2x7he/gme_yolo_update_jan_22_2021/",wait_time = 2)
+Table =Table %>% rbind( tibble(content))
+```
+Gamestop Big Picture: Technical Recap - 1/25 - 1/29
+https://www.reddit.com/r/investing/comments/l8jwsl/gamestop_big_picture_technical_recap_125_129/
+```{r}
+content <- reddit_content("https://www.reddit.com/r/investing/comments/l8jwsl/gamestop_big_picture_technical_recap_125_129/",wait_time = 2)
+Table =Table %>% rbind( tibble(content))
+```
+
+If GameStop hits 800 before 2/26 we will trigger the Mother of All Short Squeezes, read up.
+https://www.reddit.com/r/wallstreetbets/comments/ls0wmd/if_gamestop_hits_800_before_226_we_will_trigger/
+
+```{r}
+content <- reddit_content("https://www.reddit.com/r/wallstreetbets/comments/ls0wmd/if_gamestop_hits_800_before_226_we_will_trigger/",wait_time = 2)
+Table =Table %>% rbind( tibble(content))
+```
+
+Search things in batch
+
+```{r}
+
+links <- reddit_urls(search_terms = "gamestop", cn_threshold = 2000, page_threshold = 4)
+links <-links %>%  rbind(tibble( reddit_urls(search_terms = "gamestop", cn_threshold = 5000, page_threshold = 4)))
+links <-links %>%  rbind(tibble( reddit_urls(search_terms = "gamestop", cn_threshold = 3000, page_threshold = 4)))
+rownames(links) <- 1:nrow(links)
+links <- links %>% select(URL)
+```
+
+```{r}
+content <- reddit_content(links[1,],wait_time = 2)
+Table =Table %>% rbind( tibble(content))
+```
+
+```{r}
+
+content <- reddit_content(links[2,])
+Table =Table %>% rbind( tibble(content))
+
+```
+```{r}
+
+content <- reddit_content(links[3,])
+Table =Table %>% rbind( tibble(content))
+
+```
+```{r}
+
+content <- reddit_content(links[4,])
+Table =Table %>% rbind( tibble(content))
+
+```
+```{r}
+
+content <- reddit_content(links[5,])
+Table =Table %>% rbind( tibble(content))
+
+
+```
+```{r}
+content <- reddit_content(links[6,])
+Table =Table %>% rbind( tibble(content))
+
+```
+
+```{r}
+
+content <- reddit_content(links[7,])
+Table =Table %>% rbind( tibble(content))
+
+```
+```{r}
+
+content <- reddit_content(links[8,])
+Table =Table %>% rbind( tibble(content))
+
+```
+```{r}
+
+content <- reddit_content(links[9,])
+Table =Table %>% rbind( tibble(content))
+
+```
+```{r}
+
+content <- reddit_content(links[10,])
+Table =Table %>% rbind( tibble(content))
+
+```
+```{r}
+
+content <- reddit_content(links[11,])
+Table =Table %>% rbind( tibble(content))
+```
+
+
+
+
+
+
+
+

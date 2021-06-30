@@ -1,0 +1,45 @@
+```{r}
+library(tidyverse)
+library(stopwords)
+library(tidytext)
+library(tm)
+```
+
+read the file
+```{r}
+df  <-  GamestopReddit_Testing_xlsx
+```
+
+
+Check the stopword 
+```{r}
+stopword <-  stop_words  %>% select(word)
+```
+
+Tokenise
+```{r}
+text_df <- df %>% select(comment) %>% mutate(line = c(1:7021))
+
+
+text_df <- text_df %>%
+  unnest_tokens(
+    output = word,
+    input = comment,
+    token = "ngrams",
+    n = 1
+  )
+```
+Remove the stop words with an anti join from `dplyr`
+```{r}
+
+text_df %>% anti_join(stopword)
+```
+The most frequent word
+```{r}
+countdf <- text_df %>% count(word) %>% arrange(-n)
+```
+
+
+
+
+
