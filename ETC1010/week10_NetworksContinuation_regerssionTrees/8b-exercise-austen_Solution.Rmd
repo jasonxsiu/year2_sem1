@@ -1,0 +1,78 @@
+---
+title: "Tidy text analysis 4"
+author: "Your Name"
+output: html_document
+---
+
+```{r setup}
+library(tidyverse)
+library(tidytext)
+
+```
+
+# The books of Jane Austin
+
+In this lab exercise we will analyse the sentiment of Austen's books. 
+
+Below is the code to tokenise the books and add line numbers and chapters.
+
+```{r tidy-books}
+library(janeaustenr)
+
+tidy_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(linenumber = row_number(),
+         chapter = cumsum(str_detect(text, 
+                                     regex("^chapter [\\divxlc]", 
+                                           ignore_case = TRUE)))) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+```
+
+Add sentiment categories to all the books using the nrc lexicon.
+
+```{r nrc}
+nrc <- get_sentiments("nrc")
+```
+
+
+- What are the most common "anger" words used in Emma?
+```{r}
+Emma_nrc <- tidy_books %>% 
+  filter(book == "Emma") %>%
+  inner_join(nrc, by = "word") 
+
+Emma_nrc %>% 
+  filter(sentiment == "anger") %>%
+  count(word, sort = TRUE)
+```
+
+- What are the most common "surprise" words used in Emma?
+
+```{r}
+Emma_nrc %>% 
+  filter(sentiment == "surprise") %>%
+  count(word, sort = TRUE)
+
+```
+
+Using another lexicon (bing, or afinn) compute the proportion of 
+positive words in each of Austen's books.
+
+- Which book is the most positive? negative?
+
+```{r}
+wordcounts <- tidy_books %>%
+  group_by(book) %>%
+  summarise(total_book_words = n())
+
+tidy_books %>% 
+  inner_join(get_sentiments("bing"), by = "word") %>%
+  group_by(book, sentiment) %>%
+  summarize(sentiment_word_count = n()) %>%
+  left_join(wordcounts, by = "book")  %>%
+  mutate(ratio = sentiment_word_count / total_book_words) %>%
+  group_by(sentiment) %>%
+  top_n(1, ratio)
+ 
+```

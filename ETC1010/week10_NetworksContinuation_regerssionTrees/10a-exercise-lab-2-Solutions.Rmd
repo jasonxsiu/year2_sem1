@@ -1,0 +1,124 @@
+---
+output: html_document
+---
+
+# Lab exercise
+
+- OECD PISA, what factors affect math scores?
+- 15 year old standardized test scores, Australia, 2015
+- Response: math
+- Predictors: gender, anxtest, wealth, math_time, books, tvs
+
+- Make a plot of all the variables
+```{r}
+library(tidyverse)
+library(broomstick)
+library(here)
+library(ggplot2)
+library(gridExtra)
+library(rpart)
+library(rpart.plot)
+#install.packages("mltools")
+#library(mltools)
+```
+
+
+```{r fig.width=12, fig.height=6, eval=TRUE, echo=FALSE}
+
+pisa_au <- read_csv(here::here("data/pisa_au.csv"))
+
+pisa_au <- pisa_au %>% 
+  filter(!is.na(gender)) %>%
+  filter(!is.na(anxtest)) %>%
+  filter(!is.na(wealth)) %>%
+  filter(!is.na(math_time)) %>%
+  filter(!is.na(books)) %>%
+  filter(!is.na(tvs))
+p1 <- ggplot(pisa_au, aes(x=gender, y=math)) +
+  geom_boxplot() 
+p2 <- ggplot(pisa_au, aes(x=anxtest, y=math)) +
+  geom_point() + geom_smooth(se=FALSE)
+p3 <- ggplot(pisa_au, aes(x=wealth, y=math)) +
+  geom_point() + geom_smooth(se=FALSE)
+p4 <- ggplot(pisa_au, aes(x=math_time, y=math)) +
+  geom_point() + geom_smooth(se=FALSE)
+p5 <- ggplot(pisa_au, aes(x=factor(books), y=math)) +
+  geom_boxplot() 
+p6 <- ggplot(pisa_au, aes(x=factor(tvs), y=math)) +
+  geom_boxplot() 
+grid.arrange(p1, p2, p3, p4, p5, p6, ncol=3)
+
+```
+
+---
+# Fit a linear model
+
+```{r eval=TRUE, echo=FALSE}
+pisa_lm <- lm(math~gender+anxtest+wealth+math_time+books+tvs,
+              data=pisa_au, 
+              weights=stuweight)
+summary(pisa_lm)
+```
+
+---
+# Fit a regression tree
+
+```{r eval=TRUE, echo=FALSE}
+pisa_rp <- rpart(math~gender+anxtest+wealth+math_time+books+tvs,
+                 data=pisa_au, 
+                 weights=stuweight)
+pisa_rp
+```
+
+```{r eval=TRUE, echo=FALSE}
+rpart.plot(pisa_rp, roundint = FALSE)
+```
+
+---
+# What is the most important variable
+
+```{r eval=TRUE, echo=FALSE}
+tidy(pisa_rp)
+
+ggplot(pisa_au, aes(x=books, y=math)) +
+  geom_point() + geom_vline(xintercept=2.5, colour="hotpink") 
+```
+
+---
+# How good is the model? Compute the $MSE$ for the tree.
+
+```{r eval=TRUE, echo=FALSE}
+#Get estimates by predicting
+predict_rpart <- predict(pisa_rp, pisa_au %>% select(-"math"))
+
+#Calculate Mean square error
+mse1 <- mean((predict_rpart - pisa_au$math)^2) 
+mse1 
+```
+
+---
+# Which model fits better? The tree or the linear regression model?
+
+```{r eval=TRUE, echo=FALSE}
+#Get estimates by predicting
+predict_lm <- predict(pisa_lm, pisa_au %>% select(-"math"))
+
+#Calculate Mean square error
+mse2 <- mean((predict_lm - pisa_au$math)^2) 
+mse2 
+```
+
+- Change the control parameters to reduce the $MSE$ of the tree below that of the regression model.
+
+```{r, eval = TRUE, echo=FALSE}
+pisa_rp2 <- rpart(math~gender+anxtest+wealth+math_time+books+tvs, data=pisa_au, weights=stuweight, control = rpart.control(minsplit = 50))
+pisa_rp2
+
+
+#Get estimates by predicting
+predict_rpart2 <- predict(pisa_rp2, pisa_au %>% select(-"math"))
+
+#Calculate Mean square error
+mse3 <- mean((predict_rpart2 - pisa_au$math)^2) 
+mse3 
+```
