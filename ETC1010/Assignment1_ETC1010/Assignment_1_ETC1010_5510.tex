@@ -1,0 +1,952 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Assignment 1 ETC1010 - 5510},
+  pdfauthor={Jason Ching Yuen Siu},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+
+\title{Assignment 1 ETC1010 - 5510}
+\usepackage{etoolbox}
+\makeatletter
+\providecommand{\subtitle}[1]{% add subtitle to \maketitle
+  \apptocmd{\@title}{\par {\large #1 \par}}{}{}
+}
+\makeatother
+\subtitle{New South Wales Crime Incidents Report}
+\author{Jason Ching Yuen Siu}
+\date{Thursday, March 25 2021}
+
+\begin{document}
+\maketitle
+
+\hypertarget{instructions-to-students}{%
+\section{Instructions to Students}\label{instructions-to-students}}
+
+This assignment is designed to simulate a scenario in which you are
+taking over someone's existing work and continuing with it to draw some
+further insights.
+
+This is a real world dataset taken from the New South Wales Bureau of
+Crime Statistics and Research. The data can be found here at
+\url{https://www.bocsar.nsw.gov.au/Documents/Datasets/SuburbData.zip}.
+Specifically, the data file called ``SuburbData2019csv'' located in your
+data folder inside the RStudio project will be used for this assignment.
+
+You have just joined a consulting company as a data scientist. To give
+you some experience and guidance, you are performing a quick summary of
+the data while answering a number questions that the chief business
+analytics leader has. This is not a formal report, but rather something
+you are giving to your manager that describes the data with some
+interesting insights.
+
+Please make sure you read the hints throughout the assignment to help
+guide you on the tasks.
+
+The points allocated for each of the elements in the assignment are
+marked next to the code for each question.
+
+\hypertarget{marking-grades}{%
+\subsection{Marking + Grades}\label{marking-grades}}
+
+\begin{itemize}
+\tightlist
+\item
+  This assignment will be worth \textbf{10\%} of your total grade, and
+  is marked out of 116 marks total. \textbf{Due on: Friday 26 March}.
+\end{itemize}
+
+For this assignment, you will need to upload the following into Moodle:
+
+\begin{verbatim}
+  - Your Rmd file,
+  - The rendered html file, and
+  - The PDF rendered file.
+  
+\end{verbatim}
+
+\hypertarget{how-to-find-help-from-r-functions}{%
+\subsection{How to find help from R
+functions?}\label{how-to-find-help-from-r-functions}}
+
+Remember, you can look up the help file for functions by typing:
+\texttt{?function\_name}. For example, \texttt{?mean}. Feel free to
+google questions you have about how to do other kinds of plots, and post
+on the ``Assignment Discussion Forum'' any questions you have about the
+assignment.
+
+\hypertarget{how-to-complete-this-assignment}{%
+\subsection{How to complete this
+assignment?}\label{how-to-complete-this-assignment}}
+
+To complete the assignment, you will need to fill in the blanks with
+appropriate function names, arguments, or other names. These sections
+are marked with \texttt{\_\_\_}. \textbf{At a minimum, your assignment
+should be able to be ``knitted''} using the \texttt{Knit} button for
+your Rmarkdown document.
+
+If you want to look at what the assignment looks like in progress with
+some of the R codes remaining invalid in the R code chunks, remember
+that you can set the R chunk options to \texttt{eval\ =\ TRUE} like so:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\BaseNTok{```\{r this-chunk-will-not-run, eval = TRUE\} `r''`}
+\BaseNTok{ggplot()}
+\BaseNTok{```}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{If you use \texttt{eval\ =\ TRUE} or \texttt{cache\ =\ TRUE},
+please remember to ensure that you have set to \texttt{eval\ =\ TRUE}
+when you submit the assignment, to ensure all your R codes run.}
+
+There are a few tricky bits that might require you to look back into
+your previous R code chunks (that is intentionally done for you to
+understand how things work within an Rmd file!)
+
+You will be completing this assignment \textbf{INDIVIDUALLY}.
+
+\hypertarget{due-date}{%
+\subsection{Due Date}\label{due-date}}
+
+This assignment is due in by close of business (5pm) on Friday, 26 March
+2021. You will submit the assignment via Moodle. Please make sure you
+add your name on the YAML part of this Rmd file.
+
+\hypertarget{treatment}{%
+\section{Treatment}\label{treatment}}
+
+You work as a data scientist in the well-named consulting company,
+``Consulting for You''.
+
+It's your second day at the company, and you're taken to your desk. Your
+boss says to you:
+
+\begin{quote}
+We have a data set with the crime statistics in New South Wales for the
+past years!
+\end{quote}
+
+\begin{quote}
+We've got a meeting coming up soon to get insights about the crime in
+NSW. We want you to tell us about this data set and what we can do with
+it.
+\end{quote}
+
+\begin{quote}
+You're in with the new hires of data scientists here. We'd like you to
+take a look at the data and tell me what the spreadsheet tells us. I've
+written some questions on the report for you to answer.
+\end{quote}
+
+\begin{quote}
+Most importantly, can you get this to me by \textbf{5pm, Friday, 26
+March 2021}.
+\end{quote}
+
+\begin{quote}
+Please read below and answer all the questions (ensure that you can knit
+the file to produce an html file and a PDF file to hand them in to me
+via Moodle):
+\end{quote}
+
+\hypertarget{load-all-the-libraries-that-you-need-here}{%
+\section{Load all the libraries that you need
+here}\label{load-all-the-libraries-that-you-need-here}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(tidyverse)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{reading-and-preparing-data}{%
+\section{Reading and preparing data}\label{reading-and-preparing-data}}
+
+!change the working directory!
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{crime_dat <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"data/SuburbData2019.csv"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Note : Since from the question 20 onward need the suburban named
+``Coogee'', therefore, I added a new ``Coogee''.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# I am selecting here only a portion of the data}
+\CommentTok{# to reduce computation times.}
+
+\NormalTok{crime_data <-crime_dat }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\KeywordTok{c}\NormalTok{(}\StringTok{`}\DataTypeTok{Jan 1995}\StringTok{`}\OperatorTok{:}\StringTok{`}\DataTypeTok{Jan 2010}\StringTok{`}\NormalTok{)) }\OperatorTok{%>%}
+\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{filter}\NormalTok{(Suburb }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"Chifley"}\NormalTok{,}
+                              \StringTok{"Redfern"}\NormalTok{,}
+                              \StringTok{"Clare"}\NormalTok{,}
+                              \StringTok{"Paddington"}\NormalTok{,}
+                              \StringTok{"Redfern"}\NormalTok{,}
+                              \StringTok{"Zetland"}\NormalTok{,}
+                              \StringTok{"Claymore"}\NormalTok{,}
+                              \StringTok{"Congo"}\NormalTok{,}
+                              \StringTok{"Yenda"}\NormalTok{, }
+                              \StringTok{"Young"}\NormalTok{,}
+                              \StringTok{"Yarra"}\NormalTok{,}
+                              \StringTok{"Woodcroft"}\NormalTok{,}
+                              \StringTok{"Woodhill"}\NormalTok{,}
+                              \StringTok{"Warri"}\NormalTok{,}
+                              \StringTok{"Waterloo"}\NormalTok{,}
+                              \StringTok{"Randwick"}\NormalTok{,}
+                              \StringTok{"Coogee"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{question-1-display-the-first-10-rows-of-the-data-set}{%
+\section{Question 1: Display the first 10 rows of the data
+set}\label{question-1-display-the-first-10-rows-of-the-data-set}}
+
+\textbf{Hint:} Check \emph{?head} in your R console
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{head}\NormalTok{(crime_data, }\DecValTok{10}\NormalTok{)   }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 10 x 122
+##    Suburb `Offence catego~ Subcategory `Feb 2010` `Mar 2010` `Apr 2010`
+##    <chr>  <chr>            <chr>            <dbl>      <dbl>      <dbl>
+##  1 Chifl~ Homicide         Murder *             0          0          0
+##  2 Chifl~ Homicide         Attempted ~          0          0          0
+##  3 Chifl~ Homicide         Murder acc~          0          0          0
+##  4 Chifl~ Homicide         Manslaught~          0          0          0
+##  5 Chifl~ Assault          Domestic v~          1          0          1
+##  6 Chifl~ Assault          Non-domest~          2          0          0
+##  7 Chifl~ Assault          Assault Po~          0          0          0
+##  8 Chifl~ Sexual offences  Sexual ass~          1          0          0
+##  9 Chifl~ Sexual offences  Indecent a~          0          0          0
+## 10 Chifl~ Abduction and k~ Abduction ~          0          0          0
+## # ... with 116 more variables: `May 2010` <dbl>, `Jun 2010` <dbl>, `Jul
+## #   2010` <dbl>, `Aug 2010` <dbl>, `Sep 2010` <dbl>, `Oct 2010` <dbl>, `Nov
+## #   2010` <dbl>, `Dec 2010` <dbl>, `Jan 2011` <dbl>, `Feb 2011` <dbl>, `Mar
+## #   2011` <dbl>, `Apr 2011` <dbl>, `May 2011` <dbl>, `Jun 2011` <dbl>, `Jul
+## #   2011` <dbl>, `Aug 2011` <dbl>, `Sep 2011` <dbl>, `Oct 2011` <dbl>, `Nov
+## #   2011` <dbl>, `Dec 2011` <dbl>, `Jan 2012` <dbl>, `Feb 2012` <dbl>, `Mar
+## #   2012` <dbl>, `Apr 2012` <dbl>, `May 2012` <dbl>, `Jun 2012` <dbl>, `Jul
+## #   2012` <dbl>, `Aug 2012` <dbl>, `Sep 2012` <dbl>, `Oct 2012` <dbl>, `Nov
+## #   2012` <dbl>, `Dec 2012` <dbl>, `Jan 2013` <dbl>, `Feb 2013` <dbl>, `Mar
+## #   2013` <dbl>, `Apr 2013` <dbl>, `May 2013` <dbl>, `Jun 2013` <dbl>, `Jul
+## #   2013` <dbl>, `Aug 2013` <dbl>, `Sep 2013` <dbl>, `Oct 2013` <dbl>, `Nov
+## #   2013` <dbl>, `Dec 2013` <dbl>, `Jan 2014` <dbl>, `Feb 2014` <dbl>, `Mar
+## #   2014` <dbl>, `Apr 2014` <dbl>, `May 2014` <dbl>, `Jun 2014` <dbl>, `Jul
+## #   2014` <dbl>, `Aug 2014` <dbl>, `Sep 2014` <dbl>, `Oct 2014` <dbl>, `Nov
+## #   2014` <dbl>, `Dec 2014` <dbl>, `Jan 2015` <dbl>, `Feb 2015` <dbl>, `Mar
+## #   2015` <dbl>, `Apr 2015` <dbl>, `May 2015` <dbl>, `Jun 2015` <dbl>, `Jul
+## #   2015` <dbl>, `Aug 2015` <dbl>, `Sep 2015` <dbl>, `Oct 2015` <dbl>, `Nov
+## #   2015` <dbl>, `Dec 2015` <dbl>, `Jan 2016` <dbl>, `Feb 2016` <dbl>, `Mar
+## #   2016` <dbl>, `Apr 2016` <dbl>, `May 2016` <dbl>, `Jun 2016` <dbl>, `Jul
+## #   2016` <dbl>, `Aug 2016` <dbl>, `Sep 2016` <dbl>, `Oct 2016` <dbl>, `Nov
+## #   2016` <dbl>, `Dec 2016` <dbl>, `Jan 2017` <dbl>, `Feb 2017` <dbl>, `Mar
+## #   2017` <dbl>, `Apr 2017` <dbl>, `May 2017` <dbl>, `Jun 2017` <dbl>, `Jul
+## #   2017` <dbl>, `Aug 2017` <dbl>, `Sep 2017` <dbl>, `Oct 2017` <dbl>, `Nov
+## #   2017` <dbl>, `Dec 2017` <dbl>, `Jan 2018` <dbl>, `Feb 2018` <dbl>, `Mar
+## #   2018` <dbl>, `Apr 2018` <dbl>, `May 2018` <dbl>, `Jun 2018` <dbl>, `Jul
+## #   2018` <dbl>, `Aug 2018` <dbl>, ...
+\end{verbatim}
+
+\hypertarget{question-2-how-many-variables-and-observations-do-we-have}{%
+\section{Question 2: How many variables and observations do we
+have?}\label{question-2-how-many-variables-and-observations-do-we-have}}
+
+\textbf{Hint:} Look for help \emph{?dim} in your R console and remember
+that variables are in columns and observations in rows. \emph{dim()}
+returns the number of rows and the number of columns in the data set (in
+that order)
+
+\begin{verbatim}
+## [1] 992 122
+\end{verbatim}
+
+The number of variables are 992 (1pt) and the number of rows are 122
+(1pt)
+
+\hypertarget{question-3-what-are-the-names-of-the-first-20-vaiables-in-this-data-set}{%
+\section{Question 3: What are the names of the first 20 vaiables in this
+data
+set?}\label{question-3-what-are-the-names-of-the-first-20-vaiables-in-this-data-set}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{names}\NormalTok{(crime_data)[}\DecValTok{1}\OperatorTok{:}\DecValTok{20}\NormalTok{]   }\CommentTok{#1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "Suburb"           "Offence category" "Subcategory"      "Feb 2010"        
+##  [5] "Mar 2010"         "Apr 2010"         "May 2010"         "Jun 2010"        
+##  [9] "Jul 2010"         "Aug 2010"         "Sep 2010"         "Oct 2010"        
+## [13] "Nov 2010"         "Dec 2010"         "Jan 2011"         "Feb 2011"        
+## [17] "Mar 2011"         "Apr 2011"         "May 2011"         "Jun 2011"
+\end{verbatim}
+
+\hypertarget{question-4-rename-the-variable-of-offence-category-to-offence_category-and-show-the-names-of-the-first-4-variables-in-the-data-set}{%
+\section{Question 4: Rename the variable of ``Offence category'' to
+``Offence\_category'' and show the names of the first 4 variables in the
+data
+set}\label{question-4-rename-the-variable-of-offence-category-to-offence_category-and-show-the-names-of-the-first-4-variables-in-the-data-set}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{crime <-}\StringTok{ }\NormalTok{crime_data }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{rename}\NormalTok{(}\StringTok{`}\DataTypeTok{Offence_category}\StringTok{`}\NormalTok{ =}\StringTok{ `}\DataTypeTok{Offence category}\StringTok{`}\NormalTok{)  }\CommentTok{# 1pt}
+
+\KeywordTok{names}\NormalTok{(crime)[}\DecValTok{1}\OperatorTok{:}\DecValTok{4}\NormalTok{] }\CommentTok{#1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Suburb"           "Offence_category" "Subcategory"      "Feb 2010"
+\end{verbatim}
+
+\hypertarget{question-5-change-the-crime-data-suburbdata2019csv-into-long-format-so-that-all-the-years-are-grouped-together-into-a-variable-called-year-and-the-corresponding-incidents-count-into-a-variable-called-incidents}{%
+\section{Question 5: Change the ``crime'' data (``SuburbData2019csv'')
+into long format so that all the years are grouped together into a
+variable called ``year'' and the corresponding incidents count into a
+variable called
+``incidents''}\label{question-5-change-the-crime-data-suburbdata2019csv-into-long-format-so-that-all-the-years-are-grouped-together-into-a-variable-called-year-and-the-corresponding-incidents-count-into-a-variable-called-incidents}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{crime_long <-}\StringTok{ }\NormalTok{crime }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{pivot_longer}\NormalTok{(}\DataTypeTok{cols =} \StringTok{"Feb 2010"}\OperatorTok{:}\StringTok{"Dec 2019"}\NormalTok{,  }\CommentTok{# 2pt}
+               \DataTypeTok{names_to =} \StringTok{"year"}\NormalTok{,             }\CommentTok{# 1pt}
+               \DataTypeTok{values_to =} \StringTok{"incidents"}\NormalTok{)       }\CommentTok{# 1pt}
+
+\KeywordTok{head}\NormalTok{(crime_long)     }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 6 x 5
+##   Suburb  Offence_category Subcategory year     incidents
+##   <chr>   <chr>            <chr>       <chr>        <dbl>
+## 1 Chifley Homicide         Murder *    Feb 2010         0
+## 2 Chifley Homicide         Murder *    Mar 2010         0
+## 3 Chifley Homicide         Murder *    Apr 2010         0
+## 4 Chifley Homicide         Murder *    May 2010         0
+## 5 Chifley Homicide         Murder *    Jun 2010         0
+## 6 Chifley Homicide         Murder *    Jul 2010         0
+\end{verbatim}
+
+\hypertarget{question-6-separate-the-column-year-into-two-columns-with-names-month-and-year.-display-the-first-3-lines-of-the-data-set-to-show-the-updated-data-set}{%
+\section{Question 6: Separate the column ``year'' into two columns with
+names ``Month'' and ``Year''. Display the first 3 lines of the data set
+to show the updated data
+set}\label{question-6-separate-the-column-year-into-two-columns-with-names-month-and-year.-display-the-first-3-lines-of-the-data-set-to-show-the-updated-data-set}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{crime_long_new <-}\StringTok{ }\NormalTok{crime_long }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{separate}\NormalTok{(}\DataTypeTok{col =}\NormalTok{ year,                        }\CommentTok{# 1pt}
+           \DataTypeTok{into =} \KeywordTok{c}\NormalTok{(}\StringTok{"Month"}\NormalTok{, }\StringTok{"Year"}\NormalTok{), }\StringTok{" "}\NormalTok{ )   }\CommentTok{# 2pt}
+
+  \KeywordTok{head}\NormalTok{(crime_long_new,}\DecValTok{3}\NormalTok{)                        }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 3 x 6
+##   Suburb  Offence_category Subcategory Month Year  incidents
+##   <chr>   <chr>            <chr>       <chr> <chr>     <dbl>
+## 1 Chifley Homicide         Murder *    Feb   2010          0
+## 2 Chifley Homicide         Murder *    Mar   2010          0
+## 3 Chifley Homicide         Murder *    Apr   2010          0
+\end{verbatim}
+
+\hypertarget{question-7-if-you-look-at-the-data-crime_long_new-you-will-notice-that-the-variable-of-year-is-coded-as-character.-in-this-section-we-are-going-to-convert-the-variable-of-year-to-a-numeric-variable}{%
+\section{\texorpdfstring{Question 7: If you look at the data
+\emph{crime\_long\_new}, you will notice that the variable of ``Year''
+is coded as character. In this section, we are going to convert the
+variable of ``Year'' to a numeric
+variable}{Question 7: If you look at the data crime\_long\_new, you will notice that the variable of ``Year'' is coded as character. In this section, we are going to convert the variable of ``Year'' to a numeric variable}}\label{question-7-if-you-look-at-the-data-crime_long_new-you-will-notice-that-the-variable-of-year-is-coded-as-character.-in-this-section-we-are-going-to-convert-the-variable-of-year-to-a-numeric-variable}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{crime_long_new }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{Year =} \KeywordTok{as.numeric}\NormalTok{(Year))   }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 118,048 x 6
+##    Suburb  Offence_category Subcategory Month  Year incidents
+##    <chr>   <chr>            <chr>       <chr> <dbl>     <dbl>
+##  1 Chifley Homicide         Murder *    Feb    2010         0
+##  2 Chifley Homicide         Murder *    Mar    2010         0
+##  3 Chifley Homicide         Murder *    Apr    2010         0
+##  4 Chifley Homicide         Murder *    May    2010         0
+##  5 Chifley Homicide         Murder *    Jun    2010         0
+##  6 Chifley Homicide         Murder *    Jul    2010         0
+##  7 Chifley Homicide         Murder *    Aug    2010         0
+##  8 Chifley Homicide         Murder *    Sep    2010         0
+##  9 Chifley Homicide         Murder *    Oct    2010         0
+## 10 Chifley Homicide         Murder *    Nov    2010         0
+## # ... with 118,038 more rows
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{head}\NormalTok{(crime_long_new }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{Year =} \KeywordTok{as.numeric}\NormalTok{(Year)) )                }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 6 x 6
+##   Suburb  Offence_category Subcategory Month  Year incidents
+##   <chr>   <chr>            <chr>       <chr> <dbl>     <dbl>
+## 1 Chifley Homicide         Murder *    Feb    2010         0
+## 2 Chifley Homicide         Murder *    Mar    2010         0
+## 3 Chifley Homicide         Murder *    Apr    2010         0
+## 4 Chifley Homicide         Murder *    May    2010         0
+## 5 Chifley Homicide         Murder *    Jun    2010         0
+## 6 Chifley Homicide         Murder *    Jul    2010         0
+\end{verbatim}
+
+\hypertarget{question-8-display-the-years-in-the-data-set.-how-many-years-are-included-in-this-data-set}{%
+\section{Question 8: Display the years in the data set. How many years
+are included in this data
+set?}\label{question-8-display-the-years-in-the-data-set.-how-many-years-are-included-in-this-data-set}}
+
+\begin{quote}
+Remember that you can learn more about what these functions by typing:
+\texttt{?unique} or \texttt{?length} into the R console.
+\end{quote}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{unique}\NormalTok{(crime_long_new}\OperatorTok{$}\NormalTok{Year)    }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "2010" "2011" "2012" "2013" "2014" "2015" "2016" "2017" "2018" "2019"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# length tell us the length or longitude of a variable or a vector}
+\KeywordTok{length}\NormalTok{(}\KeywordTok{unique}\NormalTok{(crime_long_new}\OperatorTok{$}\NormalTok{Year))   }\CommentTok{#1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 10
+\end{verbatim}
+
+\hypertarget{question-9-how-many-different-suburbs-are-there-in-the-data-set}{%
+\section{Question 9: How many different suburbs are there in the data
+set?}\label{question-9-how-many-different-suburbs-are-there-in-the-data-set}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{length}\NormalTok{(}\KeywordTok{unique}\NormalTok{(crime_long_new}\OperatorTok{$}\NormalTok{Suburb))     }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 16
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{n_distinct}\NormalTok{(crime_long_new}\OperatorTok{$}\NormalTok{Suburb) }\CommentTok{# 1pt }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 16
+\end{verbatim}
+
+\hypertarget{question-10-how-many-incidents-do-we-have-per-offence_category-in-total-for-2019}{%
+\section{Question 10: How many incidents do we have per
+``Offence\_category'' in total for
+2019?}\label{question-10-how-many-incidents-do-we-have-per-offence_category-in-total-for-2019}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{crime_long_new }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{filter}\NormalTok{(Year }\OperatorTok{==}\StringTok{ "2019"}\NormalTok{) }\OperatorTok{%>%}\StringTok{    }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{count}\NormalTok{(Offence_category , }\DataTypeTok{wt =}\NormalTok{ incidents)              }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 21 x 2
+##    Offence_category                          n
+##    <chr>                                 <dbl>
+##  1 Abduction and kidnapping                  1
+##  2 Against justice procedures             1950
+##  3 Arson                                    60
+##  4 Assault                                1396
+##  5 Betting and gaming offences               1
+##  6 Blackmail and extortion                   2
+##  7 Disorderly conduct                      429
+##  8 Drug offences                          1416
+##  9 Homicide                                  2
+## 10 Intimidation, stalking and harassment   566
+## # ... with 11 more rows
+\end{verbatim}
+
+\hypertarget{question-11-which-is-the-offence_category-with-highest-number-of-incidents-in-2019}{%
+\section{Question 11: Which is the ``Offence\_category'' with highest
+number of incidents in
+2019?}\label{question-11-which-is-the-offence_category-with-highest-number-of-incidents-in-2019}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{crime_long_new }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{filter}\NormalTok{(Year }\OperatorTok{==}\StringTok{ "2019"}\NormalTok{) }\OperatorTok{%>%}\StringTok{    }\CommentTok{#  1pt}
+\StringTok{  }\KeywordTok{count}\NormalTok{(Offence_category , }\DataTypeTok{wt =}\NormalTok{ incidents, }\DataTypeTok{sort =} \OtherTok{TRUE}\NormalTok{) }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 21 x 2
+##    Offence_category                          n
+##    <chr>                                 <dbl>
+##  1 Theft                                  4061
+##  2 Against justice procedures             1950
+##  3 Drug offences                          1416
+##  4 Assault                                1396
+##  5 Malicious damage to property           1093
+##  6 Intimidation, stalking and harassment   566
+##  7 Transport regulatory offences           517
+##  8 Disorderly conduct                      429
+##  9 Liquor offences                         356
+## 10 Sexual offences                         273
+## # ... with 11 more rows
+\end{verbatim}
+
+\hypertarget{question-12-how-many-offences-are-there-in-each-subcategory-of-the-offence_category-of-homicide}{%
+\section{\texorpdfstring{Question 12: How many offences are there in
+each Subcategory of the ``Offence\_category'' of
+\emph{Homicide}?}{Question 12: How many offences are there in each Subcategory of the ``Offence\_category'' of Homicide?}}\label{question-12-how-many-offences-are-there-in-each-subcategory-of-the-offence_category-of-homicide}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{crime_long_new }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{filter}\NormalTok{(Offence_category }\OperatorTok{==}\StringTok{ "Homicide"}\NormalTok{) }\OperatorTok{%>%}\StringTok{    }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{group_by}\NormalTok{(Subcategory) }\OperatorTok{%>%}\StringTok{                            }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{summarise}\NormalTok{(}\DataTypeTok{Number_of_incidents =} \KeywordTok{sum}\NormalTok{(incidents))      }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 4 x 2
+##   Subcategory                  Number_of_incidents
+##   <chr>                                      <dbl>
+## 1 Attempted murder                               3
+## 2 Manslaughter *                                 1
+## 3 Murder *                                      14
+## 4 Murder accessory, conspiracy                   1
+\end{verbatim}
+
+\hypertarget{question-13-select-the-suburb-called-paddington-and-calculate-the-number-of-incidents-for-offence_category-of-drug-offences-then-calculate-the-total-number-of-incidents-for-each-subcategory.-finally-show-a-table-arranged-by-number_of_-incidents-high-to-low}{%
+\section{Question 13: Select the suburb called ``Paddington'' and
+calculate the number of incidents for ``Offence\_category'' of ``Drug
+offences'' then calculate the total number of incidents for each
+Subcategory. Finally, show a table arranged by ``Number\_of\_
+incidents'' (high to
+low)}\label{question-13-select-the-suburb-called-paddington-and-calculate-the-number-of-incidents-for-offence_category-of-drug-offences-then-calculate-the-total-number-of-incidents-for-each-subcategory.-finally-show-a-table-arranged-by-number_of_-incidents-high-to-low}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Paddington <-}\StringTok{ }\NormalTok{crime_long_new }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{filter}\NormalTok{(Suburb}\OperatorTok{==}\StringTok{ "Paddington"}\NormalTok{,                       }\CommentTok{# 2pt}
+\NormalTok{                 Offence_category }\OperatorTok{==}\StringTok{ "Drug offences"}\NormalTok{) }\OperatorTok{%>%}\StringTok{      }\CommentTok{#1pt}
+\StringTok{          }\KeywordTok{group_by}\NormalTok{(Subcategory) }\OperatorTok{%>%}\StringTok{                            }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{summarise}\NormalTok{(}\DataTypeTok{Number_of_incidents =} \KeywordTok{sum}\NormalTok{(incidents) )  }\OperatorTok{%>%}\StringTok{    }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{arrange}\NormalTok{(}\KeywordTok{desc}\NormalTok{(Number_of_incidents))    }\CommentTok{# 1pt}
+ 
+\KeywordTok{head}\NormalTok{(Paddington)                             }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 6 x 2
+##   Subcategory                           Number_of_incidents
+##   <chr>                                               <dbl>
+## 1 Possession and/or use of cannabis                     154
+## 2 Possession and/or use of cocaine                      111
+## 3 Possession and/or use of other drugs                   82
+## 4 Other drug offences                                    73
+## 5 Dealing, trafficking in cocaine                        68
+## 6 Possession and/or use of amphetamines                  57
+\end{verbatim}
+
+\hypertarget{question-14-lets-have-a-look-at-the-changes-over-time-for-possession-andor-use-of-cannabis-in-the-suburb-of-paddington}{%
+\section{Question 14: Let's have a look at the changes over time for
+``Possession and/or use of cannabis'' in the suburb of
+Paddington}\label{question-14-lets-have-a-look-at-the-changes-over-time-for-possession-andor-use-of-cannabis-in-the-suburb-of-paddington}}
+
+To answer this question, we need to first filter the ``Suburb'' and the
+``Subcategory''. Then, group incident by year and finally sum the number
+of incidents for each year
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Paddington_cannabis <-}\StringTok{ }\NormalTok{crime_long_new }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{filter}\NormalTok{( Suburb }\OperatorTok{==}\StringTok{ "Paddington"}\NormalTok{,               }\CommentTok{# 1pt}
+\NormalTok{                 Subcategory }\OperatorTok{==}\StringTok{ "Possession and/or use of cannabis"}\NormalTok{) }\OperatorTok{%>%}\StringTok{   }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{group_by}\NormalTok{(Year) }\OperatorTok{%>%}\StringTok{                                               }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{summarise}\NormalTok{(}\DataTypeTok{Number_of_incidents =} \KeywordTok{sum}\NormalTok{( incidents) )}\OperatorTok{%>%}\StringTok{              }\CommentTok{#1pt}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{Year =} \KeywordTok{as.numeric}\NormalTok{(Year))    }\CommentTok{# 1pt}
+ 
+
+\KeywordTok{head}\NormalTok{(Paddington_cannabis,}\DecValTok{3}\NormalTok{)  }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 3 x 2
+##    Year Number_of_incidents
+##   <dbl>               <dbl>
+## 1  2010                  17
+## 2  2011                  17
+## 3  2012                  15
+\end{verbatim}
+
+\hypertarget{question-15-create-a-line-plot-to-display-the-trend-of-the-incidents-that-you-calculated-for-paddington}{%
+\section{Question 15: Create a line plot to display the trend of the
+incidents that you calculated for
+Paddington}\label{question-15-create-a-line-plot-to-display-the-trend-of-the-incidents-that-you-calculated-for-paddington}}
+
+On the x-axis you should have ``Year'' and on the y-axis you should
+display ``Number\_of\_incidents''
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(Paddington_cannabis, }\KeywordTok{aes}\NormalTok{( }\DataTypeTok{x =}\NormalTok{ Year, }\DataTypeTok{y =}\NormalTok{ Number_of_incidents)) }\OperatorTok{+}\StringTok{ }\CommentTok{# 2pt }
+\StringTok{  }\KeywordTok{geom_line}\NormalTok{()                     }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Assignment_1_ETC1010_5510_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+\hypertarget{question-16-create-the-same-plot-as-in-question-15-but-now-include-also-the-suburb-called-randwick-you-will-see-two-trends-in-the-same-plot.-make-sure-that-the-variable-of-suburb-is-defined-as-a-factor}{%
+\section{\texorpdfstring{Question 16: Create the same plot as in
+Question 15 but now include also the suburb called ``Randwick'' (you
+will see two trends in the same plot). Make sure that the variable of
+``Suburb'' is defined as a
+\emph{factor}}{Question 16: Create the same plot as in Question 15 but now include also the suburb called ``Randwick'' (you will see two trends in the same plot). Make sure that the variable of ``Suburb'' is defined as a factor}}\label{question-16-create-the-same-plot-as-in-question-15-but-now-include-also-the-suburb-called-randwick-you-will-see-two-trends-in-the-same-plot.-make-sure-that-the-variable-of-suburb-is-defined-as-a-factor}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{both_cannabis <-}\StringTok{ }\NormalTok{crime_long_new }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{filter}\NormalTok{( Suburb }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"Randwick"}\NormalTok{, }\StringTok{"Paddington"}\NormalTok{),          }\CommentTok{# 1pt }
+\NormalTok{                 Subcategory }\OperatorTok{==}\StringTok{ "Possession and/or use of cannabis"}\NormalTok{) }\OperatorTok{%>%}\StringTok{   }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{group_by}\NormalTok{(Year, Suburb) }\OperatorTok{%>%}\StringTok{                              }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{summarise}\NormalTok{(}\DataTypeTok{Number_of_incidents =} \KeywordTok{sum}\NormalTok{( incidents))  }\OperatorTok{%>%}\StringTok{     }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
+         \DataTypeTok{Year =} \KeywordTok{as.numeric}\NormalTok{(Year),                                 }\CommentTok{# 1pt}
+         \DataTypeTok{Suburb =} \KeywordTok{as.factor}\NormalTok{(Suburb)}
+\NormalTok{         )                              }\CommentTok{# 1pt}
+  
+
+\KeywordTok{ggplot}\NormalTok{(both_cannabis, }\KeywordTok{aes}\NormalTok{( }\DataTypeTok{x =}\NormalTok{ Year,      }\CommentTok{# 1pt}
+                           \DataTypeTok{y =}\NormalTok{ Number_of_incidents, }\CommentTok{# 1pt}
+                           \DataTypeTok{color =}\NormalTok{ Suburb)) }\OperatorTok{+}\StringTok{   }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{geom_line}\NormalTok{()   }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Assignment_1_ETC1010_5510_files/figure-latex/unnamed-chunk-9-1.pdf}
+
+\hypertarget{question-17-lets-now-look-at-the-total-number-of-crime-incidents-in-nsw-and-create-a-plot-to-visualize-the-trend}{%
+\section{Question 17: Let's now look at the total number of crime
+incidents in NSW and create a plot to visualize the
+trend}\label{question-17-lets-now-look-at-the-total-number-of-crime-incidents-in-nsw-and-create-a-plot-to-visualize-the-trend}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{crime_long_new }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{select}\NormalTok{( Year,   }\CommentTok{# 1pt}
+\NormalTok{                 incidents) }\OperatorTok{%>%}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{group_by}\NormalTok{(Year) }\OperatorTok{%>%}\StringTok{    }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{summarise}\NormalTok{(}\DataTypeTok{Number_of_incidents =} \KeywordTok{sum}\NormalTok{(incidents)) }\OperatorTok{%>%}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{Year =} \KeywordTok{as.numeric}\NormalTok{(Year)) }\OperatorTok{%>%}\StringTok{    }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{ggplot}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ Year, }\DataTypeTok{y =}\NormalTok{ Number_of_incidents )) }\OperatorTok{+}\StringTok{   }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{geom_line}\NormalTok{()  }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Assignment_1_ETC1010_5510_files/figure-latex/unnamed-chunk-10-1.pdf}
+
+\hypertarget{question-18-now-lets-change-the-background-color-of-the-plot-to-white-using-the-theme_bw}{%
+\section{\texorpdfstring{Question 18: Now, let's change the background
+color of the plot to white using the
+\emph{theme\_bw()}}{Question 18: Now, let's change the background color of the plot to white using the theme\_bw()}}\label{question-18-now-lets-change-the-background-color-of-the-plot-to-white-using-the-theme_bw}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{## !Make sure you doublr check the question!}
+\NormalTok{crime_long_new }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{select}\NormalTok{( Year,   }\CommentTok{# 1pt}
+\NormalTok{                 incidents) }\OperatorTok{%>%}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{group_by}\NormalTok{(Year) }\OperatorTok{%>%}\StringTok{    }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{summarise}\NormalTok{(}\DataTypeTok{Number_of_incidents =} \KeywordTok{sum}\NormalTok{(incidents)) }\OperatorTok{%>%}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{Year =} \KeywordTok{as.numeric}\NormalTok{(Year)) }\OperatorTok{%>%}\StringTok{    }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{ggplot}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ Year, }\DataTypeTok{y =}\NormalTok{ Number_of_incidents )) }\OperatorTok{+}\StringTok{   }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{geom_line}\NormalTok{() }\OperatorTok{+}\StringTok{ }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{theme_bw}\NormalTok{()  }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Assignment_1_ETC1010_5510_files/figure-latex/unnamed-chunk-11-1.pdf}
+
+\hypertarget{question-19-lets-change-the-line-color-to-green-and-replace-it-with-a-dotted-line}{%
+\section{Question 19: Let's change the line color to green and replace
+it with a dotted
+line}\label{question-19-lets-change-the-line-color-to-green-and-replace-it-with-a-dotted-line}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{crime_long_new }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{select}\NormalTok{(incidents,  }\CommentTok{# 1pt}
+\NormalTok{                 Year) }\OperatorTok{%>%}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{group_by}\NormalTok{(Year) }\OperatorTok{%>%}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{         }\KeywordTok{summarise}\NormalTok{(}\DataTypeTok{Number_of_incidents =} \KeywordTok{sum}\NormalTok{(incidents)) }\OperatorTok{%>%}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{Year =} \KeywordTok{as.numeric}\NormalTok{(Year)) }\OperatorTok{%>%}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{ggplot}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ Year, }\DataTypeTok{y =}\NormalTok{ Number_of_incidents )) }\OperatorTok{+}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{geom_line}\NormalTok{(}\DataTypeTok{linetype =} \StringTok{"dotted"}\NormalTok{, }\DataTypeTok{color =}\StringTok{"Green"}\NormalTok{)  }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Assignment_1_ETC1010_5510_files/figure-latex/unnamed-chunk-12-1.pdf}
+
+\hypertarget{question-20-now-lets-look-at-the-total-number-of-crime-incidents-for-the-suburbs-of-redfern-coogee-and-zetland-by-creating-a-bar-plot-where-we-have-the-incidents-per-suburb-by-year-next-to-each-other}{%
+\section{Question 20: Now, let's look at the total number of crime
+incidents for the suburbs of Redfern, Coogee, and Zetland by creating a
+bar plot where we have the incidents per suburb by year next to each
+other}\label{question-20-now-lets-look-at-the-total-number-of-crime-incidents-for-the-suburbs-of-redfern-coogee-and-zetland-by-creating-a-bar-plot-where-we-have-the-incidents-per-suburb-by-year-next-to-each-other}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{##!missing!}
+\NormalTok{comparison_data<-}\StringTok{ }\NormalTok{crime_long_new }\OperatorTok{%>%}
+\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{select}\NormalTok{(Suburb ,  }\CommentTok{# 1pt}
+\NormalTok{                Year,    }\CommentTok{# 1pt }
+\NormalTok{                incidents) }\OperatorTok{%>%}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{filter}\NormalTok{( Suburb  }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"Redfern"}\NormalTok{, }\StringTok{"Coogee"}\NormalTok{, }\StringTok{"Zetland"}\NormalTok{)) }\OperatorTok{%>%}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{group_by}\NormalTok{( Suburb,Year) }\OperatorTok{%>%}\StringTok{ }\CommentTok{# 1pt}
+\StringTok{          }\KeywordTok{summarise}\NormalTok{(}\DataTypeTok{Number_of_incidents =} \KeywordTok{sum}\NormalTok{(incidents)) }\CommentTok{# 1pt}
+
+\CommentTok{## for the sake of the question 23, Year is changed to numeric}
+\NormalTok{  comparison_data <-}\StringTok{ }\NormalTok{comparison_data }\OperatorTok{%>%}\StringTok{ }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{Year =} \KeywordTok{as.numeric}\NormalTok{(Year))}
+  
+
+
+  \KeywordTok{ggplot}\NormalTok{(comparison_data, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ Year,    }\CommentTok{# 1pt}
+                            \DataTypeTok{y =}\NormalTok{ Number_of_incidents,  }\CommentTok{# 1pt}
+                            \DataTypeTok{fill =}\NormalTok{ Suburb)) }\OperatorTok{+}\StringTok{  }\CommentTok{# 1pt}
+
+\StringTok{  }\KeywordTok{geom_bar}\NormalTok{(}\DataTypeTok{stat =} \StringTok{"identity"}\NormalTok{,   }\CommentTok{# 1pt}
+             \DataTypeTok{position =} \StringTok{"dodge"}\NormalTok{) }\OperatorTok{+}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.text.x =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{angle =} \DecValTok{90}\NormalTok{, }\DataTypeTok{vjust =} \FloatTok{0.5}\NormalTok{, }\DataTypeTok{hjust=}\DecValTok{1}\NormalTok{)) }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Assignment_1_ETC1010_5510_files/figure-latex/unnamed-chunk-13-1.pdf}
+
+\hypertarget{question-21-change-the-x-and-y-axis-labels-to-years-and-incidents-respectively-for-the-figure-in-question-20-and-use-the-black-and-white-theme}{%
+\section{Question 21: Change the x and y-axis labels to ``Years'' and "
+Incidents", respectively, for the figure in Question 20 and use the
+black and white
+theme}\label{question-21-change-the-x-and-y-axis-labels-to-years-and-incidents-respectively-for-the-figure-in-question-20-and-use-the-black-and-white-theme}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(comparison_data, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ Year,     }\CommentTok{# 1pt}
+                            \DataTypeTok{y =}\NormalTok{ Number_of_incidents,  }\CommentTok{# 1pt}
+                            \DataTypeTok{fill =}\NormalTok{ Suburb)) }\OperatorTok{+}\StringTok{   }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{geom_bar}\NormalTok{(}\DataTypeTok{stat=} \StringTok{"identity"}\NormalTok{,    }\CommentTok{# 1pt}
+             \DataTypeTok{position =} \StringTok{"dodge"}\NormalTok{) }\OperatorTok{+}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{theme_bw}\NormalTok{() }\OperatorTok{+}\StringTok{  }\CommentTok{# 1pt}
+\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.text.x =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{angle =} \DecValTok{90}\NormalTok{, }\DataTypeTok{vjust =} \FloatTok{0.5}\NormalTok{, }\DataTypeTok{hjust=}\DecValTok{1}\NormalTok{)) }\OperatorTok{+}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{xlab}\NormalTok{(}\StringTok{"Years"}\NormalTok{) }\OperatorTok{+}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{ylab}\NormalTok{(}\StringTok{"Incidents"}\NormalTok{)  }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Assignment_1_ETC1010_5510_files/figure-latex/unnamed-chunk-14-1.pdf}
+
+\hypertarget{question-22-add-the-following-title-to-the-figure-constructed-in-question-21-number-of-criminal-incidents}{%
+\section{Question 22: Add the following title to the figure constructed
+in Question 21: ``Number of criminal
+incidents''}\label{question-22-add-the-following-title-to-the-figure-constructed-in-question-21-number-of-criminal-incidents}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(comparison_data, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ Year,    }\CommentTok{# 1pt}
+                            \DataTypeTok{y =}\NormalTok{ Number_of_incidents,  }\CommentTok{# 1pt}
+                            \DataTypeTok{fill =}\NormalTok{ Suburb)) }\OperatorTok{+}\StringTok{   }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{geom_bar}\NormalTok{(}\DataTypeTok{stat=} \StringTok{"identity"}\NormalTok{,    }\CommentTok{# 1pt}
+             \DataTypeTok{position =} \StringTok{"dodge"}\NormalTok{) }\OperatorTok{+}\StringTok{  }\CommentTok{# 1pt=}
+\StringTok{  }\KeywordTok{theme_bw}\NormalTok{() }\OperatorTok{+}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.text.x =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{angle =} \DecValTok{90}\NormalTok{, }\DataTypeTok{vjust =} \FloatTok{0.5}\NormalTok{, }\DataTypeTok{hjust=}\DecValTok{1}\NormalTok{)) }\OperatorTok{+}\StringTok{   }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{xlab}\NormalTok{(}\StringTok{"Years"}\NormalTok{) }\OperatorTok{+}\StringTok{   }\CommentTok{# 1pt}
+\StringTok{ }\KeywordTok{ylab}\NormalTok{(}\StringTok{"Incidents"}\NormalTok{) }\OperatorTok{+}\StringTok{   }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{ggtitle}\NormalTok{(}\StringTok{"Number of criminal incidents"}\NormalTok{)  }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Assignment_1_ETC1010_5510_files/figure-latex/unnamed-chunk-15-1.pdf}
+
+\hypertarget{question-23-by-using-facet_wrap-create-a-line-plot-to-show-the-trends-for-number_of_incidents-for-each-of-the-three-suburbs}{%
+\section{Question 23: By using ``facet\_wrap'', create a line plot to
+show the trends for ``Number\_of\_incidents'' for each of the three
+suburbs}\label{question-23-by-using-facet_wrap-create-a-line-plot-to-show-the-trends-for-number_of_incidents-for-each-of-the-three-suburbs}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(comparison_data, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ Year,   }\CommentTok{# 1pt}
+                            \DataTypeTok{y =}\NormalTok{ Number_of_incidents,  }\CommentTok{# 1pt}
+                            \DataTypeTok{fill =}\NormalTok{Suburb)) }\OperatorTok{+}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{geom_line}\NormalTok{() }\OperatorTok{+}\StringTok{   }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{facet_wrap}\NormalTok{(}\OperatorTok{~}\NormalTok{Suburb) }\OperatorTok{+}\StringTok{  }\CommentTok{# 1pt=}
+\StringTok{  }\KeywordTok{theme_bw}\NormalTok{() }\OperatorTok{+}\StringTok{  }\CommentTok{# 1pt}
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.text.x =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{angle =} \DecValTok{90}\NormalTok{, }\DataTypeTok{vjust =} \FloatTok{0.5}\NormalTok{, }\DataTypeTok{hjust=}\DecValTok{1}\NormalTok{))  }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Assignment_1_ETC1010_5510_files/figure-latex/unnamed-chunk-16-1.pdf}
+
+\hypertarget{question-24-transform-the-data-set-named-comparison_data-into-a-wide-format-where-the-suburbs-of-coogee-redfern-and-zetland-are-displayed-as-columns}{%
+\section{\texorpdfstring{Question 24: Transform the data set named
+\emph{comparison\_data} into a wide format where the suburbs of Coogee,
+Redfern, and Zetland are displayed as
+columns}{Question 24: Transform the data set named comparison\_data into a wide format where the suburbs of Coogee, Redfern, and Zetland are displayed as columns}}\label{question-24-transform-the-data-set-named-comparison_data-into-a-wide-format-where-the-suburbs-of-coogee-redfern-and-zetland-are-displayed-as-columns}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{comparison_data }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{pivot_wider}\NormalTok{(}\DataTypeTok{id_cols =} \OperatorTok{-}\NormalTok{Number_of_incidents,   }\CommentTok{# 1pt}
+              \DataTypeTok{names_from =}\NormalTok{ Suburb,  }\CommentTok{# 1pt}
+              \DataTypeTok{values_from =}\NormalTok{Number_of_incidents)  }\CommentTok{# 1pt}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 10 x 4
+##     Year Coogee Redfern Zetland
+##    <dbl>  <dbl>   <dbl>   <dbl>
+##  1  2010    897    3225     197
+##  2  2011   1189    3822     318
+##  3  2012    877    3959     380
+##  4  2013    885    4440     312
+##  5  2014    762    4400     359
+##  6  2015    912    4674     562
+##  7  2016   1016    5623     493
+##  8  2017   1011    4411     526
+##  9  2018   1013    4102     572
+## 10  2019   1119    4052     621
+\end{verbatim}
+
+\end{document}
