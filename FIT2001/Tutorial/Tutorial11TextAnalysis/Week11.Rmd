@@ -1,0 +1,54 @@
+(b) Using the information gained in Part 
+
+```{r import-lib}
+library(tm)
+library(slam)
+library(SnowballC)
+```
+```{r}
+
+docs = Corpus (
+  DirSource("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Tute/Tutorial/Tutorial11TextAnalysis/CorpusAbstracts/txt") )
+summary(docs)
+
+docs = tm_map( docs, removeNumbers)
+docs = tm_map( docs, removePunctuation)
+docs = tm_map( docs, content_transformer(tolower))
+docs = tm_map( docs, removeWords, stopwords("English"))
+docs = tm_map( docs,stripWhitespace)
+docs = tm_map( docs, stemDocument  = "english")
+
+dtm = DocumentTermMatrix(docs)
+dtm_D = as.data.frame(dtm)
+
+```
+
+
+
+```{r}
+
+UFO = read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Tute/Tutorial/Tutorial11TextAnalysis/UFOsample.csv", header = F)
+
+UFO = cbind(row.names(UFO), UFO)
+colnames(UFO) = c("doc_id", "text")
+
+docs = Corpus(DataframeSource(UFO))
+toSpace = content_transformer(function(x, pattern)  gsub (pattern , "  ",x))
+docs = tm_map(docs, toSpace, "-")
+
+docs = tm_map(docs, removeNumbers)
+docs = tm_map(docs, removePunctuation)
+docs = tm_map(docs, content_transformer(tolower))
+docs = tm_map(docs, removeWords, stopwords("english"))
+dtm  = DocumentTermMatrix(docs)
+dtm_D = as.data.frame(as.matrix(dtm))
+
+dtm = removeSparseTerms(dtm,0.2)
+dtms = as.data.frame(as.matrix(dtm))
+disMatrix = dist(scale(dtms))
+fit = hclust(disMatrix, method = "ward.D")
+
+plot(fit)
+
+```
+

@@ -1,0 +1,193 @@
+ 1 
+
+1 Work through the examples in the lecture slides. For the examples using R you could 
+download and install the packages using the script below. 
+
+ 
+```{r include=FALSE}
+# clean up the environment before starting 
+library(tree) 
+library(e1071) 
+library(ROCR) 
+library(randomForest) 
+library(adabag) 
+library(rpart)
+library(tidyverse)
+```
+
+ 
+
+ 
+
+2 Using the references above, in addition to your lecture notes and any other references you 
+locate write short answers to the following: 
+
+
+ 
+
+a. Describe the general philosophy behind, ensemble classifiers and the way they work. That 
+is, what do all the ensemble classifiers we studied have in common? 
+
+
+
+b. Describe the similarities and differences between each of the ensemble classifiers studied: 
+boosting, bagging, random forests. In particular, you should be aware of how each classifier 
+is unique within the group. 
+
+ 
+
+3 The Japanese credit data “JapaneseCredit.csv” has 690 records relating to credit card 
+applications, and whether they were approved or not. All attribute names and values have 
+been anonymised. Ref. http://archive.ics.uci.edu/ml/datasets/Japanese+Credit+Screening 
+
+```{r}
+JC <- read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Tutorial/Tute9/JapaneseCredit.csv", stringsAsFactors = T)
+```
+
+ There are a variety of attribute types: continuous, and nominal (some with a small number of 
+different values, and some with large). There are also some missing values that have been 
+indicated as NA. The class value indicates “+” or “-” indicating whether or not a credit 
+applicant was approved. 
+
+(a) Split the data into a 70% training and a 30% test set and create a classification model 
+using each of the following techniques in turn: 
+
+ 
+
+• Decision Tree 
+• Naïve Bayes 
+• Bagging 
+• Boosting 
+• Random Forest 
+
+```{r}
+set.seed(9999)
+train.row = sample(1:nrow(JC), .7 * nrow(JC))
+JC.Train= JC[train.row,]
+JC.Test = JC[-train.row,]
+
+#missing values
+
+#DT
+JC.Tree = tree(Class~ ., data = JC.Train)
+summary(JC.Tree)
+plot(JC.Tree)
+text(JC.Tree)
+
+#
+ibag= bagging(Class ~ ., data = JC.Train )
+ibagg.pred = predict.bagging(ibag, newdata = JC.Test)
+table( observe = JC.Test$Class ,predicted = ibagg.pred$class)
+
+#boosting
+iboost = boosting(Class~., data = )
+
+
+
+#NB Model
+NB.Model = naiveBayes(Class~., data = JC.Train)
+NB.predict=predict(NB.Model,JC.Test,type = "raw")
+confusionMatrix()
+
+
+```
+ 
+
+(b) Using the test data, classify each of the test cases into “+” or “-”. Create a confusion 
+matrix for each and report the accuracy of each model. 
+
+ 
+
+(c) Now, calculate the confidence of predicting a “+” outcome for each of the test cases 
+and construct an ROC curve for each classifier. You should be able to plot all the 
+curves on the same axis. Use a different colour for each classifier. 
+
+ 
+
+ What does the ROC curve tell you about each of the classifiers. Is there a single 
+“best” classifier? 
+
+ 
+
+(d) Examining each of the models, determine the most important variables in predicting 
+whether or not an applicant would be granted a loan. 
+
+ 
+
+4 The Mushroom data set (mushroom.data.csv) contains 22 pieces of information about 8000+ 
+species of mushrooms. This data set was obtained from the UCI Machine Learning 
+Repository. https://archive.ics.uci.edu/ml/datasets/Mushroom 
+
+ 
+
+ Using the data, construct a decision models using each of the ensemble classifiers (bagging, 
+random forest and boosting) to predict whether an unclassified mushroom is of “class” 
+poisonous or edible based on the other attributes: 
+
+ 
+
+Create a training (70%) and test data set and report the accuracy of your model for each of 
+the classifiers. 
+
+ 
+
+Which attributes are most important in distinguishing between poisonous and edible 
+mushrooms? (Look at variable importance measures etc.) Is this consistent for all of the 
+classifiers? 
+
+ 
+
+Which classifier works best? 
+
+ 
+
+5 Using the Japanese credit data fit an artificial neural network using only the numeric 
+attributes to classify whether an applicant was approved or not. Using an 80% training set 
+and 20% test set calculate the accuracy of your model. 
+
+ 
+
+ You will need to prepare your data before you can fit the ANN. The suggested order of data 
+processing is: 
+
+ 
+
+ 1. Remove rows containing missing values 
+ 2. Recode the output Class as numeric 
+ 3. Create training and test sets 
+ 4. Fit neural network and test accuracy etc. 
+
+ 
+
+
+ 3 
+
+ * Extension. Augment the input using some of the Attributes containing categorical 
+variables. (chose an Attribute with 2 options. For example, A1 has two levels: a and b). You 
+should make indicator columns before creating training and test sets (That is, after Step 2 
+above) 
+
+ 
+
+6 Using the modified Play Tennis data (“playtennistrainTF.csv” and playtennistestTF.csv) fit 
+an ANN to classify whether a person should play tennis or not. Using the test data, evaluate 
+the accuracy of your model. 
+
+ 
+
+ You will need to prepare your data by creating indicator columns before you can fit the 
+ANN. You can do this using the ‘recode’ function but a faster way is by using the 
+‘model.matrix’ function. The suggested order of data processing is: 
+
+ 
+
+ 1. Read training data 
+ 2. Read test data 
+ 3. Create a single file merging training and test data using ‘rbind’ 
+ 4. Create the indicator columns for each attribute using ‘recode’ or ‘model.matrix’ 
+ 5. Tidy up the recoded data frame or bind the model.matrix to the merged file 
+ 6. Separate the merged file into training and test data 
+ 7. Expand the training data set to 100 records by resampling 
+ 8. Fit the neural network 
+
+ 

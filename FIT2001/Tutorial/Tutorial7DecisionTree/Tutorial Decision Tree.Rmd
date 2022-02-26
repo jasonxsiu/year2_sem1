@@ -1,0 +1,154 @@
+---
+title: "Decision_tree_tutorial"
+output: html_document
+---
+import the lib
+```{r}
+library(tree)
+```
+
+2 Calculation of entropy and information gain 
+
+ 
+
+ Table 1 below includes data for 10 different types of aliens. The data is to be used to 
+determine which aliens are friendly and which are not. 
+
+ 
+```{r}
+
+```
+
+
+
+
+3 The built-in data set mtcars describes the fuel consumption and 10 other variables for 32 
+cars produced during 1973 – 1974. Fuel consumption is determined as miles per gallon 
+(mpg). Create a decision tree to classify cars as either high consumption (greater than the 
+median), or low consumption. To do this, follow the steps below. 
+
+
+a. Convert the mpg variables in to a class using the script below and create new data 
+set: carsclass. 
+```{r}
+
+data(mtcars) 
+attach(mtcars) 
+attach(mtcars) 
+summary(mpg) 
+#classify which one is high consumption (>19.2)
+#consumption means cons 
+cons = ifelse(mpg >= 19.20, "yes", "no") 
+carsclass = cbind(cons, mtcars) 
+carsclass$cons = as.factor(carsclass$cons)
+head(carsclass) 
+
+```
+
+b. Partition your new data set into 70% training and 30% test. 
+
+```{r}
+set.seed(9999)
+#split the data
+train.rows = sample(1:nrow(carsclass), .7*nrow(carsclass))
+c.train = carsclass[train.rows, ]
+c.test = carsclass[-train.rows, ]
+
+```
+ 
+
+c. Fit the ‘tree’ model to your data. Make sure you don’t include mpg as an attribute. 
+You may need to first create a synthetically larger training data set using resampling 
+with replacement as was done for the playtennis example. 
+
+ 
+
+d. Examine your decision tree using summary and plot functions. What are the 
+important attributes for determining fuel economy? 
+
+ 
+
+e. Using the test data set, calculate the accuracy of your model. How well does it 
+predict fuel economy? 
+
+```{r}
+#Why don’t you include mpg as an attribute?  becuz cons is basead on mpg
+
+cl.train = c.train[sample(nrow(c.train),100,replace = TRUE),]
+
+
+#Fit the ‘tree’ model 
+c.tree = tree(cons ~ . -mpg, data = cl.train)
+summary(c.tree)
+plot(c.tree)
+text(c.tree)
+
+#predit
+c.predict = predict(c.tree, c.test, type = "class")
+
+table(actuall = c.test$cons, predicted = c.predict)
+```
+
+
+ 
+4 The Zoo data set (zoo.data.csv) contains data relating to seven classes of animals. 
+
+ 
+
+Using all the data, construct a decision tree to predict class “type” based on the other 
+attributes. Note that you will need to specify that “type” is a factor. Which attributes are 
+most influential in determining the class of an animal. What classes have less than 100% 
+accuracy? 
+
+ 
+ 
+ decision tree to predict class “type” based on the other 
+attributes
+ 
+```{r}
+zoo = read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Week-(8)/Tutorial 8 3152/zoo.data.csv")
+zoo$type = as.factor(zoo$type)
+
+```
+
+Which attributes are most influential in determining the class of an animal. What classes have less than 100% accuracy? 
+
+```{r}
+x =  tree(type ~ . -animal_name , data = zoo )
+
+summary(x)
+plot(x)
+text(x)
+```
+
+
+
+
+
+Q6
+ 
+```{r}
+test= read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Tute/Tutorial/Tutorial7DecisionTree/Kaggle.Titanic.test.csv")
+ train= read.csv("C:/Users/sjsa3/Desktop/Shared_with_Mac/year2_sem1/FIT3152/Tute/Tutorial/Tutorial7DecisionTree/Kaggle.Titanic.train.csv")
+```
+
+```{r}
+train$PassengerId=NULL
+train$Ticket=NULL
+train$Name=NULL
+test$PassengerId=NULL
+test$Ticket=NULL
+test$Name=NULL
+```
+
+```{r}
+train$Survived = factor(train$Survived)
+t.fit=tree(Survived~.-Cabin, data=train)
+summary(t.fit)
+plot(t.fit)
+text(t.fit, pretty=0)
+tpredict = predict(t.fit, test, type = "class")
+
+```
+
+

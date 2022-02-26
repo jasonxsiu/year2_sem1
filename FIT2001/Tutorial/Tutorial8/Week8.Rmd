@@ -1,0 +1,79 @@
+3 Creating ROC Charts 
+
+ 
+
+ The Aliens table below provides information about several aliens including a class attribute, 
+IsFriendly. A decision tree has been used to classify the data and obtained confidence values 
+for IsFriendly=’yes’. 
+
+ 
+
+a) Using this information, create a ROC chart for the Alien data. 
+
+```{r}
+library(ROCR)
+
+pConf = c(.7,.9,.4,.1,.9,.8,.3,.6,.7,.6)
+pLabel = c(0,1,0,0,1,1,1,1,1,0)
+
+cPrep = prediction(pConf,pLabel)
+cPerf = performance(cPrep, "tpr","fpr")
+#ROC
+plot(cPerf)
+abline(0,1)
+
+#AUC
+auc = performance(cPrep,"auc")
+auc@y.values
+```
+
+ Remember ROC charts graph TPR vs FPR for varying confidence thresholds. You 
+can use the tables below the data table to assist you with the calculations. 
+
+ 
+
+b) What does this ROC chart tell you about the classifier? 
+
+ 
+
+c) What is the AUC value and what does this tell you about the classifier? 
+
+4 Creating a Lift chart using the Aliens data 
+
+ 
+
+ If you select an alien at random, what is the chance it will be friendly?  
+```{r}
+clift = performance(cPrep, "lift")
+plot(clift)
+```
+
+ 
+
+a. Using the data provided, what is the value of the Lift if you choose an alien from the 
+ subset which the classifier is at least 80% confident of? 
+
+ 
+
+b. Now sketch a Lift chart, using steps of 20% (i.e. 80%, 60%, 40%, 20%) 
+ 
+  
+
+5 Fitting a tree, cross validation and pruning in R 
+
+ 
+
+ The Zoo data set “zoo.data.csv” contains data relating to seven classes of animals. Construct 
+a decision tree using 70% training and 30% test data. Note that you will need to make sure 
+the model knows that “type” is a factor. Make a table showing the actual vs predicted 
+classifications  using your test data. Calculate the accuracy of your model (by calculating 
+correct classifications/all classifications). Are there any classes that are particularly difficult 
+to predict? 
+
+ 
+
+Using cross validation and the “cv.tree” function see whether or not you are able to create a 
+more accurate tree by pruning. Make a prediction with the new tree and compare its 
+accuracy with your original tree. 
+
+ 
